@@ -1,0 +1,45 @@
+{
+  "schema_version": 1,
+  "candidate_id": "Fixture Candidate",
+  "sources_inspected": ["job_description_fixture.md", "cv_fixture.md"],
+  "sources_excluded": [],
+  "assessments": [
+    {
+      "requirement_id": "M1",
+      "status": "MOSTLY_SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [{"location": "Experience", "quote": "Used Tool Alpha daily in production."}],
+      "rationale": "Invalid status value."
+    },
+    {
+      "requirement_id": "M2",
+      "status": "SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [{"location": "Experience", "quote": "Led the company-wide Tool Beta migration."}],
+      "rationale": "Quote is fabricated: not in the CV."
+    },
+    {
+      "requirement_id": "M4",
+      "status": "UNCLEAR",
+      "evidence_grade": "C",
+      "evidense": [],
+      "rationale": "Misspelt field, and no verification question."
+    },
+    {
+      "requirement_id": "P1",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "E",
+      "evidence": [{"location": "Projects", "quote": "Experimented with Tool Epsilon in a hobby project."}],
+      "rationale": "Invalid evidence grade."
+    },
+    {
+      "requirement_id": "M9",
+      "status": "SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [{"location": "Experience", "quote": "Used Tool Alpha daily in production."}],
+      "rationale": "Unknown requirement ID."
+    }
+  ],
+  "positioning": "x",
+  "application_brief": "x"
+}

@@ -1,4 +1,6 @@
-"""Job Fit Evaluator package.
+"""Job Fit Evaluator: deterministic framework for agent-supplied fit assessments.
 
-Placeholder created in Milestone 1. To be implemented in Milestone 2.
+The framework parses context files, validates externally supplied judgements,
+scores them per context/evaluation_standard.md and renders a Markdown report.
+It never decides whether CV content satisfies a requirement.
 """

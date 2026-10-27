@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "candidate_id": "Fixture Candidate",
+  "sources_inspected": ["job_description_fixture.md", "cv_fixture.md"],
+  "sources_excluded": [
+    {"path": "unrelated_notes.md", "reason": "Not candidate material."}
+  ],
+  "assessments": [
+    {
+      "requirement_id": "M1",
+      "status": "SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [{"location": "Experience → Engineer — Fixture Org *(fictional)*", "quote": "Used Tool Alpha daily in production."}],
+      "rationale": "Fixture: direct professional use."
+    },
+    {
+      "requirement_id": "M2",
+      "status": "SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [{"location": "Engineer — Fixture Org *(fictional)*", "quote": "Maintained Tool Beta pipelines."}],
+      "rationale": "Fixture: direct professional use."
+    },
+    {
+      "requirement_id": "M3",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "B",
+      "evidence": [{"location": "Experience → Engineer — Fixture Org *(fictional)*", "quote": "Configured Tool Gamma for a small team."}],
+      "rationale": "Fixture: configuration evidenced; 'advanced' not evidenced.",
+      "uncertainty": "Fixture: depth of configuration unknown."
+    },
+    {
+      "requirement_id": "M4",
+      "status": "UNCLEAR",
+      "evidence_grade": "C",
+      "evidence": [{"location": "Skills", "quote": "Tool Delta"}],
+      "rationale": "Fixture: keyword appears only in the skills list.",
+      "verification_question": "Fixture: where have you used Tool Delta?"
+    },
+    {
+      "requirement_id": "P1",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "B",
+      "evidence": [{"location": "Projects", "quote": "Experimented with Tool Epsilon in a hobby project."}],
+      "rationale": "Fixture: personal project only."
+    },
+    {
+      "requirement_id": "P2",
+      "status": "UNSUPPORTED",
+      "evidence_grade": "C",
+      "evidence": [],
+      "rationale": "Fixture: searched all sections for Tool Zeta; not found."
+    }
+  ],
+  "positioning": "Fixture positioning text.",
+  "application_brief": "Fixture application brief text.",
+  "uncertainties": ["Fixture: illustrative uncertainty."]
+}

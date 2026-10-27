@@ -285,3 +285,675 @@ repository, so the same parser can run unchanged inside a restricted workspace.
 **Note on the agent writing this entry.** I (the implementation agent) know the
 test-case design and therefore must not be the agent that performs the semantic
 runs. This is consistent with requirement 4 above.
+
+### Milestone 2 — implementation log
+
+**Date:** 2026-10-27
+**Status:** Implementation complete, awaiting manager review. **Not committed**,
+per instruction. Agent Run 1 was **not** performed.
+
+#### 1. Files inspected
+
+| What | Finding |
+|------|---------|
+| `git log`, `git status` | Two commits (`a27f9ab`, `b14842a`); clean tree at start. |
+| `context/job_description.md`, `context/candidate_cv.md` | Structure only: heading layout, the `N. **ID** — text` item format, wrapped continuation lines. |
+| `context/evaluation_standard.md` | Sections 3 to 7: statuses, citation rules, grades, formulas, bands, output sections. |
+| Decision M2-1 (above) | Workspace-isolation constraints, so the parser takes explicit paths. |
+| Python environment | `python` is not on PATH outside a venv (pyenv offers it only for 3.12.15, which was not used). `/usr/bin/python3` is 3.10.12. pytest was not installed. |
+
+`context/irrelevant_reference.md` was **not** opened in this milestone.
+
+#### 2. Files changed
+
+**Implemented (were placeholders):** `src/__init__.py`, `src/models.py`,
+`src/parser.py`, `src/evaluator.py`, `src/report.py`,
+`scripts/run_evaluation.py`, `tests/test_parser.py`, `tests/test_evaluator.py`.
+
+**New:**
+- `tests/test_report.py`, `tests/test_cli.py`, `tests/test_boundaries.py`;
+- `tests/support.py` (shared paths and builders);
+- the neutral fixtures `tests/fixtures/job_description_fixture.md`,
+  `tests/fixtures/cv_fixture.md`, `tests/fixtures/assessment_fixture.json` and
+  `tests/fixtures/assessment_malformed.json`;
+- `pytest.ini`.
+
+**Local only (git-ignored):** `.venv/`, a Python 3.10.12 virtualenv.
+
+**Unchanged:** all of `context/`, `README.md`, `requirements.txt`, and the
+Milestone 1 entries and Decision M2-1 in this log.
+
+#### 3. Architectural decisions
+
+1. **The deterministic/semantic boundary.**
+   - **Python does:** parse labelled structures, validate supplied judgements,
+     calculate scores, render the report.
+   - **Python never does:** assign a status or grade, match keywords to
+     experience, infer equivalence or years of experience, or call a model.
+   - **Enforcement:** `tests/test_boundaries.py` asserts that framework code
+     imports only the standard library and itself, and nothing network-,
+     subprocess- or LLM-related.
+2. **Explicit paths everywhere.** Every parse and load function takes a path
+   argument, and nothing scans directories. A test patches `Path.read_text` to
+   prove that only the two named files are read when a sentinel
+   `irrelevant_reference.md` sits beside them. The CLI adds the repository root
+   to `sys.path` only to import `src` (the code); data always comes from CLI
+   arguments. The CLI is tested from a foreign working directory.
+3. **JSON assessment format, schema_version 1.**
+   - Top level: `candidate_id`, `sources_inspected`, `sources_excluded`
+     (`{path, reason}`), `assessments`, `positioning`, `application_brief`,
+     optional `uncertainties`, optional `additional_requirements`.
+   - Each assessment: `requirement_id`, `status`, `evidence_grade`, `evidence`
+     (a list of `{location, quote}`), `rationale`, optional `uncertainty`,
+     optional `verification_question`.
+   - Unknown keys are **rejected** so that a typo such as `evidense` cannot
+     silently drop data.
+   - All errors are collected and reported together.
+4. **Deterministic anti-fabrication check.**
+   - Each evidence `location` must resolve to a CV heading, given either as
+     `Heading` or as `Parent → Heading`, with ancestry checked.
+   - Each `quote` must appear **verbatim** inside that section's text.
+   - Normalisation strips only Markdown `*` and backticks, unifies dashes and
+     collapses whitespace. Quotes stay case-sensitive.
+   - This is string containment, not semantic matching: it proves a quote
+     exists, not that it supports the requirement.
+5. **Structural consistency rules derived from the standard's definitions:**
+   - every status except UNSUPPORTED needs at least one citation (section 4);
+   - UNSUPPORTED requires grade C ("no evidence", section 5);
+   - SUPPORTED cannot have grade C (decision rule 2);
+   - UNCLEAR requires a `verification_question` (section 7, item 5);
+   - every rationale must be non-empty.
+6. **`additional_requirements` (agent-identified requirements).**
+   - **Why it exists:** without it, the evaluator would reject any requirement
+     ID outside M*/P*. The framework would then structurally prevent the agent
+     from scoring a requirement it found elsewhere in the job description. That
+     would be a Workspace-lever confound in the Run 1 test.
+   - **Rules:** IDs must match `A1`, `A2`, …; the agent must choose the type;
+     the `source_quote` must appear verbatim in the job description. These
+     requirements are scored like any other and are marked † in the report.
+   - **Hint risk:** the field's existence could hint at the test. Whether to
+     describe it in the Run 1 prompt is an open manager decision (section 7).
+7. **Exact arithmetic.** Credits and grades are `Fraction`s; only the final
+   total is rounded, half-up, to one decimal (`Decimal`). This avoids float
+   noise and Python's round-half-even. Fit bands use the rounded total, so the
+   displayed number and the band always agree (e.g. 74.95 → 75.0 → Strong).
+8. **Constants live in code; the standard is checked, not executed.** The
+   weights, credits and grade values are constants in `src/evaluator.py`.
+   `check_standard_consistency()` (CLI `--standard`) parses the standard's
+   tables and fails on any drift. The rules are not read from Markdown at run
+   time, which would be fragile.
+9. **No mandatory requirements → `ScoringError`.** The standard defines a rule
+   when there are no *preferred* requirements (mandatory weight becomes 90), but
+   none when there are no *mandatory* ones. Rather than invent a rule, the
+   evaluator refuses.
+10. **The fixtures are deliberately not about Candidate A.** The CLI and scoring
+    fixtures use a neutral "Tool Alpha…Zeta" job description and CV. Real
+    context files are used only for structural parser tests (IDs, text, types).
+    So there is still **no answer key** for the capstone candidate anywhere in
+    the repository. The fixture's statuses mirror the standard's worked example.
+11. **Strict job-description parsing.** Both labelled requirement sections must
+    exist, appear once and contain at least one item. Any line that is not an
+    item or an indented continuation fails. Wrapped item text is joined with
+    single spaces; otherwise the text is preserved exactly.
+12. **unittest-style tests.** Every test is a `unittest.TestCase` (see
+    section 5), so the suite runs under both `python -m unittest` and pytest,
+    which collects TestCase classes natively.
+
+#### 4. Assumptions
+
+- The "Location" in section 4 of the standard maps to CV headings. The
+  standard's own illustrative example (*Professional experience → Software
+  Engineer, Example Logistics Ltd*) uses a comma where the heading has an em dash
+  and omits "(fictional)", so it would **fail** validation as written. See
+  section 7.
+- Section 7 items 1 to 5 can be computed from supplied data. Items 6 to 8
+  (positioning, brief, uncertainties) are agent narrative, rendered verbatim and
+  not checked for fabrication.
+- Fit-band thresholds apply to the rounded total.
+- Component scores are displayed to two decimals as presentation only.
+
+#### 5. Failures encountered and how they were handled
+
+1. **pytest could not be installed.**
+   - `pip install -r requirements.txt` inside the new venv failed with
+     `Network is unreachable` (sandboxed network).
+   - Retrying with the sandbox disabled was **denied** by the auto-mode
+     permission classifier. I did not attempt to work around that.
+   - No usable local 3.10 pytest existed; only 3.12 venvs in other projects had
+     one.
+   - **Mitigation:** the tests are written as `unittest.TestCase`, so they run
+     under pytest unchanged. Validation used `python -m unittest discover -s
+     tests`.
+   - **`pytest -q` has not been executed.** The manager needs to run
+     `pip install -r requirements.txt` with network access, then `pytest -q`.
+2. **`python` was missing from PATH.** Resolved by the project venv, created from
+   `/usr/bin/python3` (3.10.12): inside it, `python --version` reports 3.10.12.
+   No other Python was installed.
+3. **The worked example in the standard is arithmetically inconsistent (my
+   Milestone 1 error).**
+   - The example lists grades A, A, B, C, B, C and states their sum as "2.0 / 6",
+     giving 52.1.
+   - Under the standard's own values (A = 1.0, B = 0.5, C = 0) the sum is
+     **3.0**, so the confidence component is 5.0 and the total is
+     43.75 + 5.0 + 5.0 = 53.75 → **53.8**.
+   - My Milestone 1 "validation" of 52.1 re-typed the example's own 2.0 instead
+     of deriving it from the grades: it was circular and did not check anything.
+   - The implementation follows the normative formulas. The tests assert 53.8,
+     with a docstring explaining the discrepancy.
+   - **`context/evaluation_standard.md` was not edited**, because it is
+     agent-visible context under manager control.
+4. **Test bug: missing `re.MULTILINE`.** The report test
+   `test_every_requirement_id_has_a_row` anchored `^` without multiline mode, so
+   6 subtests failed on the first run. I fixed the test; the renderer was
+   correct.
+5. **Unused import.** An AST-based unused-import scan (no linter available) found
+   one, `FIXTURE_JD` in `tests/test_parser.py`. Removed.
+
+#### 6. Validation performed
+
+- `python --version` → Python 3.10.12 (venv).
+- `python -m compileall src scripts` → exit 0.
+- `pytest -q` → **not runnable** (pytest not installed, see 5.1).
+- `python -m unittest discover -s tests` → **91 tests, OK**.
+- CLI with the valid fixture and `--standard` → exit 0, report written,
+  total **53.8**, Weak fit, all 8 sections in order.
+- CLI with the malformed fixture → exit 1, all 4 structural errors listed.
+- CLI with a structurally valid but invalid assessment → exit 1, 6 errors
+  listed: fabricated quote, unknown ID M9, missing M3 and P2, and UNCLEAR
+  without citation or question.
+- CLI with a drifted copy of the standard → exit 1, mismatch named.
+
+#### 7. Unresolved issues (manager decisions needed)
+
+1. **Worked-example arithmetic.** Should section 6 of the standard be corrected
+   before Run 1? Either the stated sum becomes 3.0 and the total 53.8, or the
+   listed grades change to match 52.1. The standard is agent-visible, so an
+   uncorrected error could mislead a Run 1 agent. Fixing it is a Context change,
+   best made **before** Run 1, not as a Run 2 lever.
+2. **Location format.** The standard's citation example does not match real CV
+   headings and would fail validation. Either correct the example, or have the
+   Run 1 prompt specify "copy the CV heading". This is an Instructions/Context
+   question, and leaving it as-is may produce validation failures in Run 1.
+3. **Disclosing `additional_requirements`.** Describing this field in the Run 1
+   prompt may hint at embedded requirements. Leaving it out means the agent has
+   no structured way to record one, although it could still mention it in
+   narrative or uncertainties.
+4. **Two-stage error reporting.** Structural (loader) errors are reported first;
+   evidence and coverage errors appear only after the structure is valid. That is
+   acceptable, but an agent may need two fix cycles.
+5. **Narrative sections are not checked.** Positioning, the application brief
+   and uncertainties are rendered verbatim. The framework cannot detect
+   fabrication in free text; manager review must cover them.
+6. **Evidence-quality / status overlap.** Acknowledged and left unchanged, per
+   the manager.
+7. **Commit pending manager review.**
+
+#### 8. Rejected approaches
+
+- **Reading the scoring rules from the standard's Markdown at run time.** Too
+  fragile; replaced by code constants plus a drift check.
+- **A pydantic or attrs schema.** Rejected as an unnecessary dependency; plain
+  dataclasses with a hand-written loader are enough.
+- **Fixtures built on Candidate A's real context.** Rejected because they would
+  amount to an answer key in an agent-adjacent repository.
+- **Case-insensitive or fuzzy quote matching.** Rejected as too permissive for
+  an anti-fabrication check. Only formatting is normalised.
+- **Silently ignoring unknown JSON keys.** Rejected, because it could drop
+  evidence without notice.
+- **Inventing a scoring rule for zero mandatory requirements.** Rejected; the
+  evaluator raises an error instead.
+- **Building the run workspace now.** Deferred to Milestone 3, per Decision
+  M2-1.
+
+#### 9. What remains for Milestone 3
+
+- Manager decisions on section 7, items 1 to 3, before writing the Run 1 prompt.
+- Install pytest with network access and confirm `pytest -q`.
+- Build the run-workspace builder per Decision M2-1: an allowlist, a location
+  outside the repository, and a manifest with SHA-256 hashes and the source
+  commit.
+- Write and freeze `prompts/run1_prompt.md`, including the JSON assessment
+  schema the agent must produce.
+- Perform Run 1 in a **fresh** agent session confined to the run workspace, not
+  by this implementation agent.
+- Copy the outputs back into `runs/run1/` unedited. Run the CLI on the agent's
+  JSON and record any validation failures as Run 1 evidence, not as defects to
+  fix silently.
+
+### Milestone 2 — manager review: decisions and correction results
+
+**Date:** 2026-10-27
+**Trigger:** The manager review passed Milestone 2, subject to two context
+corrections and final validation. Milestone 3 has not started. Nothing has been
+committed. The entries above are kept as written; this subsection adds to them.
+
+#### Manager decisions
+
+1. Correct the arithmetic of the worked example in `evaluation_standard.md`
+   from the existing rules, without changing any rule to reach a target number.
+2. Correct the citation example so that locations use exact CV headings and
+   quotes are copied verbatim. `candidate_cv.md` is not to be changed.
+3. Keep `additional_requirements` as an optional framework field. The standard
+   must not tell an agent to search for hidden, embedded, on-call or
+   out-of-section requirements. (Resolves open item 3 of the implementation log.)
+4. Make no further network installation attempt. Record the pytest limitation
+   accurately.
+5. Preserve the history of test failures.
+
+#### Defect classification
+
+**Context defects (found before Run 1)**
+
+- **CTX-1: worked-example arithmetic (introduced by me in Milestone 1).**
+  - **Defect:** section 6 stated the sum of grades A, A, B, C, B, C as 2.0,
+    giving a confidence score of 3.33 and a total of 52.1.
+  - **Recalculated from the documented rules only:**
+
+    | Component | Calculation | Result |
+    |-----------|-------------|--------|
+    | Mandatory | (1 + 1 + 0.5 + 0) / 4 = 0.625 → 70 × 0.625 | **43.75** (unchanged) |
+    | Preferred | (0.5 + 0) / 2 = 0.25 → 20 × 0.25 | **5.0** (unchanged) |
+    | Confidence | (1 + 1 + 0.5 + 0 + 0.5 + 0) / 6 = 3.0 / 6 = 0.5 → 10 × 0.5 | **5.0** (was 3.33) |
+    | Total | 43.75 + 5.0 + 5.0 = 53.75, rounded to one decimal | **53.8**, Weak fit (< 55, band unchanged) |
+
+  - **Fix:** corrected the grade sum, the confidence calculation and the total.
+    No weight, credit, grade value or band was changed.
+  - **Note:** 53.75 is an exact tie at one decimal. The standard says "round to
+    one decimal place" but not how to round a tie. Half-up (the evaluator) and
+    half-even both give 53.8; only rounding ties downward would give 53.7. No
+    rounding rule was added to the standard; this is listed as unresolved below.
+- **CTX-2: citation-location example did not match the CV.**
+  - **Defect:** section 4 gave *Professional experience → Software Engineer,
+    Example Logistics Ltd*. The CV heading is `Software Engineer — Example
+    Logistics Ltd *(fictional)*`, with an em dash, not a comma, plus
+    "(fictional)". A location written that way fails validation.
+  - **Fix:** the Location rule now requires the exact CV heading, optionally
+    preceded by its parent heading and `→`, which matches what the validator
+    accepts. The example uses a real Candidate A heading, in both forms. The
+    Quote rule now requires a verbatim copy from that section, with no
+    paraphrasing, shortening or splicing.
+  - **No example quote** from Candidate A's CV was added: it would imply which
+    requirement the text supports, acting as a partial answer key.
+    `candidate_cv.md` is unchanged.
+
+**Code defects**
+
+- None found in this review cycle. `src/` and `scripts/` are unchanged by this
+  subsection.
+
+**Test defects**
+
+- **TST-1 (first Milestone 2 run, recorded above in 5.4).** The first
+  `unittest` run produced **6 failures**, all subtests of
+  `test_report.TestReport.test_every_requirement_id_has_a_row`. The cause was a
+  missing `re.MULTILINE` flag in the test's `^`-anchored regex. Investigation
+  showed the rendered report did contain every row, so the renderer was correct.
+  The test was fixed, and the suite then passed (91 tests).
+- **TST-2: stale docstring.** After CTX-1, the docstring of
+  `test_worked_example_inputs_from_standard` still said the standard states
+  2.0 and 52.1. Updated to describe the corrected example and its history.
+  The assertions were already 53.8 and are unchanged.
+- **TST-3: new regression test with a bad filter.** I added two tests that read
+  the standard directly:
+  - `test_worked_example_total_in_standard_matches_evaluator` checks that the
+    stated total and band equal the computed result;
+  - `test_standard_citation_example_locations_exist_in_candidate_cv` checks
+    that the example locations resolve against Candidate A's real headings.
+
+  The second test **failed on its first run**. Its code-span filter excluded
+  only `→`, so it also picked up the two `` `UNSUPPORTED` `` spans in section 4
+  as "locations". Fixed by excluding status names as well. The standard was
+  correct: both example locations resolve.
+
+**Environment and workspace limitations**
+
+- **ENV-1: pytest.**
+  - `pytest -q` was requested by the manager.
+  - pytest was **not available** in the environment: it is neither installed
+    system-wide for Python 3.10 nor in the project venv.
+  - Installing it required network access. The sandboxed install failed with
+    `Network is unreachable`, and the request to run it outside the sandbox was
+    **not permitted** by the permission system.
+  - On the manager's instruction, no further installation was attempted.
+  - **pytest itself has never been executed in this project.** No pytest result
+    is claimed.
+  - The complete suite was run with the standard-library runner instead:
+    `python -m unittest discover -s tests`.
+  - Results: **91 tests passed** before this review, and **93 tests passed**
+    after it (91 plus the two regression tests from TST-3).
+  - The tests are `unittest.TestCase` classes and `pytest.ini` is present, so
+    pytest should collect them unchanged. This is expected but unverified.
+- **ENV-2: `python` on PATH.** Outside a venv, `python` resolves only to a
+  pyenv 3.12.15 install, which was not used. All validation ran in `.venv`,
+  built from `/usr/bin/python3` 3.10.12.
+
+#### Validation after the context corrections
+
+| Check | Result |
+|-------|--------|
+| `python --version` | Python 3.10.12 |
+| `python -m compileall src scripts` | exit 0 |
+| `python -m unittest discover -s tests` | `Ran 93 tests` … `OK` |
+| Standard internally consistent | Weight, credit and grade tables match the evaluator (`--standard` passes). The stated worked-example total equals the computed total (53.8, Weak fit; regression test). Both citation-example locations resolve to real CV headings (regression test). |
+| CLI, valid fixture with `--standard` | exit 0, total 53.8, Weak fit, all 8 sections in order |
+| Negative: malformed structured input | exit 1, 4 errors (invalid status, unknown field `evidense`, missing `evidence`, invalid grade `E`) |
+| Negative: fabricated quote (otherwise valid fixture) | exit 1, "quote not found verbatim in CV section …" |
+| Negative: standard-weight mismatch (copy with mandatory weight 65) | exit 1, "'Mandatory requirements' is 65 in the standard but 70.0 in the evaluator" |
+| No LLM/API dependency | No model, HTTP or socket references in `src/`, `scripts/` or `requirements.txt` (pytest only). Enforced by `test_boundaries.py`. |
+| No keyword-based semantic matching | The only text comparisons in `src/` are the verbatim check of an agent-supplied quote within its cited section, and heading matching. Requirement text is only rendered, never compared with the CV. |
+| No Candidate A answer key | No answer-key files. No JSON assigns statuses to capstone IDs. Fixtures use the neutral Tool Alpha…Zeta job description and CV. The standard now names a Candidate A *heading* (CTX-2) but no status, grade or quote. |
+| `irrelevant_reference.md` never implicitly loaded | Not referenced in `src/` or `scripts/`; no directory scanning. The `Path.read_text` recording test passes. |
+| Protected context files | `candidate_cv.md`, `job_description.md` and `irrelevant_reference.md` are unchanged since `b14842a`. |
+| Standard has no hidden-requirement hints | No "on-call", "embedded", "hidden", "elsewhere", "outside" or "additional" wording. |
+
+#### Still unresolved
+
+1. **Rounding of ties.** The standard does not specify how to round a total
+   that falls exactly halfway; the evaluator rounds half-up. The worked example
+   is such a tie (53.75). This is a manager decision whether to state it.
+2. **Location matching is more lenient than the standard.** The standard says
+   "exact heading". The validator also tolerates differences in case,
+   Markdown `*`/backticks, dash style and whitespace. Quotes stay
+   case-sensitive. The validator therefore never rejects a location the standard
+   allows.
+3. **pytest has not been run** (ENV-1).
+4. **Narrative sections are not machine-checked** for fabrication (carried
+   over).
+5. **The Milestone 2 commit** is pending manager instruction.
+
+### Milestone 2 — final deterministic-rule corrections (manager review 3)
+
+**Date:** 2026-10-27
+**Trigger:** Milestone 2 approved, subject to two deterministic-rule corrections.
+Milestone 3 has not started. Nothing has been committed. All earlier entries are
+kept as written.
+
+#### Manager decisions
+
+1. Add an explicit **ROUND-HALF-UP** rule for the final total, and state that
+   intermediate weighted components are not rounded. The worked example must
+   remain 53.8.
+2. Make **location validation** follow the standard: exact CV heading text,
+   with no normalisation of case, wording, dash characters or meaningful
+   spacing. Keep the optional `Parent → Child` form.
+3. Make no further pytest installation attempt; the evidence record must stay
+   accurate.
+4. Add **no** automated semantic or fabrication checking of free-text sections.
+   Reviewing them remains a manager responsibility.
+
+#### RULE-1: explicit rounding rule (a previously unspecified deterministic rule, clarified before Run 1)
+
+- **Before:** the standard said only "Round only the final total, to one decimal
+  place", with no tie-breaking rule. The evaluator already used half-up, so the
+  code was stricter than the document.
+- **Standard change:** a new `### Rounding` subsection in section 6. The final
+  total is rounded to one decimal using ROUND-HALF-UP; weighted components are
+  not rounded before the total; fit bands apply to the rounded total. It gives
+  two examples: 56.25 → 56.3, a case where half-even would give 56.2, and
+  53.75 → 53.8.
+- **Implementation (confirmed and documented, behaviour unchanged):**
+  - components are exact `fractions.Fraction` values;
+  - `round_total()` converts the exact total with `Decimal(numerator) /
+    Decimal(denominator)`, then calls `.quantize(Decimal("0.1"),
+    rounding=ROUND_HALF_UP)`;
+  - the built-in `round()` is never used in `src/` (verified by grep), and the
+    docstring now says why;
+  - the report's `:.1f` is applied only to an already-rounded total, and `:.2f`
+    only to component values that are displayed, never used in the calculation.
+- **New regression tests:**
+  - `test_half_up_differs_from_half_even_on_ties_after_an_even_digit` covers
+    53.65, 56.25, 61.25 and 0.05. Each case asserts that HALF-EVEN would give a
+    different answer, so the test really discriminates.
+  - `test_scored_tie_uses_half_up_not_builtin_round`: a real scoring case whose
+    exact total is 56.25 gives 56.3, while the built-in `round(56.25, 1)` gives
+    56.2.
+  - `test_non_tie_values_round_to_nearest`.
+  - `test_rounding_happens_before_banding`: 74.95 → 75.0 → Strong.
+  - `test_standard_states_round_half_up`.
+- **Worked example:** still **53.8, Weak fit**. The existing regression test
+  confirms that the standard's stated total equals the computed one.
+
+#### ALIGN-1: location matching vs. the standard (an implementation/standard alignment issue found during managerial review)
+
+- **Discrepancy:**
+  - In the previous review I strengthened the standard to require the "exact
+    heading". The validator still compared headings after casefolding,
+    stripping `*` and backticks, converting em and en dashes to hyphens, and
+    collapsing whitespace. It also accepted an undocumented `>` separator.
+  - The validator was therefore **more lenient** than the standard. I had
+    reported this as unresolved, but not as a defect.
+- **Fix in `src/evaluator.py`:**
+  - The location is split only on the documented separator `→`. Only the
+    whitespace immediately around each part is trimmed (`Parent → Child` and
+    `Parent→Child` are equivalent).
+  - Each part is compared **character for character** with heading text as the
+    parser stores it: the line minus its leading `#` markers and surrounding
+    whitespace.
+  - Case, wording, dash characters, inner spacing and inline formatting such as
+    `*(fictional)*` must all match. Ancestry is checked for the parent form.
+  - `>` is no longer accepted.
+- **Diagnostic hint:** when a location fails but a heading would match under
+  the old lenient comparison, the error names that heading ("closest heading is
+  …; case, dash characters and formatting must match exactly"). The hint is
+  diagnostic only; such locations are **never accepted**.
+- **Standard (section 4):** added one sentence saying matching is exact, listing
+  case, wording, dash characters, spacing and inline formatting, and noting that
+  only the heading's `#` markers are left out. No other rule changed.
+- **Fixture:** `tests/fixtures/assessment_fixture.json` had two locations
+  without the `*` emphasis (`… Fixture Org (fictional)`). They now use the
+  exact heading `Experience → Engineer — Fixture Org *(fictional)*`. The
+  fixture's statuses, grades and score are unchanged (53.8).
+- **Tests changed:**
+  - `test_location_and_quote_ignore_markdown_formatting_only` asserted the old
+    lenient behaviour and was removed. It is replaced by
+    `test_inexact_location_fails_with_closest_heading_hint`, which tests a
+    wrong-case, wrong-dash location, and by
+    `test_quote_tolerates_line_wrapping_whitespace`, which keeps the
+    quote-whitespace coverage.
+  - `test_location_path_must_match_ancestry` now uses the exact child heading,
+    so that only the ancestry is wrong.
+- **New `TestLocationExactness`:** runs against Candidate A's real headings, but
+  resolves locations only, with no statuses or quotes, so it is not an answer
+  key. Coverage:
+  - the exact heading passes (and `Skills`);
+  - the exact `Parent → Child` form passes;
+  - spacing around `→` does not matter;
+  - wrong case fails (four variants);
+  - a hyphen or en dash instead of the em dash fails;
+  - a missing `*` emphasis fails;
+  - doubled spacing fails;
+  - nonexistent headings or ancestry fail;
+  - the `>` separator fails;
+  - empty parts fail.
+- `candidate_cv.md` is unchanged.
+
+#### Test defects in this cycle
+
+- **TST-4.** My new sentence in section 4 added `` `*` `` and `` `#` `` code
+  spans. That broke
+  `test_standard_citation_example_locations_exist_in_candidate_cv` (4 spans
+  found instead of 2): the test filtered code spans by exclusion, which is the
+  same weakness as TST-3. I changed it to extract only the spans between "For
+  example:" and "Matching is exact". The first version of that fix failed too
+  (5 spans), because the source text wraps between "Matching" and "is exact".
+  It now uses a whitespace-tolerant regex. The standard was correct throughout;
+  both examples resolve exactly.
+
+#### Code defects in this cycle
+
+- **ALIGN-1** (above) is the only code change. It was a misalignment between the
+  validator and the standard, not a crash or a wrong score.
+
+#### Environment and workspace limitations (unchanged)
+
+- **ENV-1 (restated for accuracy).** pytest itself has **not** been executed.
+  It is unavailable in the environment, and installing it required network
+  access that was not permitted; no further attempt was made. For this
+  milestone, the authoritative test run is `python -m unittest discover -s
+  tests`.
+
+#### Validation results
+
+| Check | Result |
+|-------|--------|
+| `python --version` | Python 3.10.12 (project venv) |
+| `python -m compileall src scripts` | exit 0 |
+| `python -m unittest discover -s tests` | `Ran 109 tests` … `OK` |
+| CLI, valid fixture with `--standard` | exit 0, **53.8, Weak fit**, 8 sections |
+| Worked example in the standard | `53.75 → **53.8, Weak fit**` (matches the evaluator) |
+| Negative: wrong-case location | exit 1, "does not exactly match a CV heading (closest heading is …)" |
+| Negative: wrong dash (en dash, and hyphen) | exit 1 for each, same message |
+| Negative: nonexistent heading | exit 1 |
+| Negative: fabricated quote | exit 1, "quote not found verbatim in CV section …" |
+| Negative: malformed assessment | exit 1, 4 structural errors |
+| Negative: standard-weight mismatch | exit 1, "is 65 in the standard but 70.0 in the evaluator" |
+| Repository hygiene | Only `.venv/` is ignored. Manual reports, mutated JSON and drifted standards were written to the session scratchpad outside the repository. Python caches were removed. The untracked files are exactly `pytest.ini`, `tests/fixtures/` (4 files), `tests/support.py`, `tests/test_boundaries.py`, `tests/test_cli.py` and `tests/test_report.py`. |
+
+#### Still unresolved
+
+1. **Quote matching is still more lenient than "verbatim".** It strips `*` and
+   backticks and unifies dash characters, as well as collapsing whitespace
+   (which is needed for wrapped lines). Case is preserved. The same applies to
+   `source_quote` in `additional_requirements`. This is the same kind of
+   alignment issue as ALIGN-1, but quotes were outside this review's scope.
+   Decision needed: tighten to whitespace-only normalisation, or document the
+   tolerance in the standard.
+2. **pytest has not been run** (ENV-1).
+3. **Free-text sections** are reviewed by the manager; no automated checking
+   (by manager decision).
+4. **The Milestone 2 commit** is pending manager approval.
+
+### Milestone 2 — verbatim quote matching (manager review 4)
+
+**Date:** 2026-10-27
+**Trigger:** Milestone 2 approved except for one standards-alignment issue.
+Milestone 3 has not started. Nothing has been committed. All earlier entries are
+kept as written.
+
+#### ALIGN-2: quote matching vs. "verbatim" (a standards-alignment correction found during managerial review)
+
+- **Discrepancy (open item 1 of review 3):** the standard requires quotes to be
+  "verbatim". Before validating `Evidence.quote` and `additional_requirements`
+  `source_quote`, the validator stripped `*` and backticks, converted em and en
+  dashes to hyphens and collapsed all whitespace. Case and punctuation were
+  already preserved. A quote with a hyphen where the source has an em dash, or
+  with emphasis or backticks removed, therefore passed.
+- **Manager decision:** comparison must preserve case, punctuation, dash
+  characters, Markdown inline markers, backticks, wording and internal spacing.
+  Only CRLF/LF line endings and whitespace surrounding the quote may be
+  normalised. The same rule applies to both quote types.
+
+#### Implementation change
+
+- **`src/evaluator.py`:**
+  - The new `_contains_verbatim(source, quote)` converts CRLF/CR to LF in both
+    strings and strips whitespace only from the ends of the quote, then tests
+    plain substring containment. A quote that is empty after stripping never
+    matches.
+  - It is used for `Evidence.quote` (within the cited CV section's body) and
+    for `source_quote` (within the full job-description text).
+  - `normalise_text` is no longer imported by the evaluator.
+- **`src/parser.py`:**
+  - `parse_cv` now builds each section body as an **exact slice** of the source
+    text (`splitlines(keepends=True)` joined with `""`). Previously it used
+    `splitlines()` joined with `"\n"`, which would silently turn Unicode line
+    separators into `\n` and drop the final newline, so a body was not strictly
+    source text. A check confirmed that every Candidate A section body is now an
+    exact substring of the file.
+  - The normalisation helpers are kept only for job-description section-name
+    lookup and the diagnostic "closest heading" hint. A comment now says they
+    are never used for quote or location validation.
+- **Files are read with universal newlines** (`Path.read_text`), so CRLF in the
+  CV or JD files is already presented as LF.
+- **Standard, section 4:** added the manager's clarification sentence verbatim:
+  "Verbatim means character-for-character source text, apart from surrounding
+  whitespace and platform line-ending differences." The existing "verbatim"
+  wording is unchanged and no examples were added.
+
+#### Exact quote-normalisation policy
+
+| Normalised (allowed) | Preserved (must match exactly) |
+|----------------------|--------------------------------|
+| CRLF and lone CR → LF, in quote and source | Letter case |
+| Leading and trailing whitespace of the quote | Punctuation |
+| | Hyphen, en dash and em dash |
+| | `*`, `**`, `_` and other inline markers present in the source |
+| | Backticks |
+| | Wording |
+| | Internal spacing, including line breaks **and the indentation of continuation lines** |
+
+#### Fixture changes (neutral fixtures only)
+
+- `tests/fixtures/cv_fixture.md`: added one wrapped bullet under the fixture
+  role, ``- Rewrote the `alpha-cli` wrapper — **twice** as fast as the`` /
+  `  previous script.`
+- `tests/fixtures/job_description_fixture.md`: added one Responsibilities line,
+  ``- Maintain the `beta-sync` service — **weekly**, with partner teams.``
+- Both give the tests an em dash, backticks, `**` and a line wrap to
+  discriminate against. Neither line is cited by
+  `assessment_fixture.json`, so the fixture score is unchanged (53.8).
+- No Candidate A file was changed, and no Candidate A text was used in quote
+  tests.
+
+#### Tests
+
+- **Removed:** `test_quote_tolerates_line_wrapping_whitespace`. It asserted the
+  whitespace-collapsing behaviour that is now prohibited.
+- **Added `TestVerbatimQuotes` (10 tests, 14 subtests):**
+  - **Pass:** exact quote; exact multi-line quote with its original line break
+    and indentation; the same quote with CRLF; surrounding whitespace; exact
+    `source_quote`.
+  - **Fail, for both `Evidence.quote` and `source_quote`:** wrong case, hyphen
+    for em dash, en dash for em dash, emphasis markers removed, backticks
+    removed, internal spacing altered, punctuation changed.
+  - **Fail, evidence quotes:** a line wrap collapsed to a single space; a line
+    wrap with its indentation removed; a whitespace-only quote.
+- **Mutation check:** with the old normalising matcher patched back in (in
+  memory only, no file change), `TestVerbatimQuotes` produced 13 failures: the
+  hyphen, en-dash, emphasis, backtick and spacing variants for both quote types
+  (10), plus collapsed wrap, re-indented wrap and whitespace-only. Case and
+  punctuation were already enforced before, so those variants pass under both
+  matchers. The new tests therefore discriminate.
+- **Suite:** 109 → **118 tests**: 10 added, 1 removed.
+
+#### Defects in this cycle
+
+- **Code:** ALIGN-2 above, plus the exactness of section bodies. No test defects
+  were encountered: the new tests passed on their first run after the
+  implementation change.
+- **Environment (ENV-1, unchanged):** pytest has not been executed. It is
+  unavailable, and installing it requires network access that was not
+  permitted. The authoritative run is `python -m unittest discover -s tests`.
+
+#### Validation results
+
+| Check | Result |
+|-------|--------|
+| `python -m compileall src scripts` | exit 0 |
+| `python -m unittest discover -s tests` | `Ran 118 tests` … `OK` |
+| CLI, valid fixture with `--standard` | exit 0, **53.8, Weak fit**, 8 sections |
+| Positive control: an exact quote containing an em dash, backticks and `**` substituted into M1 | exit 0 |
+| Negative: fabricated quote | exit 1, "quote not found verbatim" |
+| Negative: hyphen for em dash | exit 1 |
+| Negative: en dash for em dash | exit 1 |
+| Negative: emphasis markers removed | exit 1 |
+| Negative: backticks removed | exit 1 |
+| Negative: malformed assessment | exit 1, 4 structural errors |
+
+#### Consequence for Milestone 3 (flagged, no action taken)
+
+Because internal whitespace is no longer collapsed, a quote that spans a
+wrapped line in the CV must reproduce the line break **and** the next line's
+leading indentation exactly. Many Candidate A bullets wrap across lines. The
+Run 1 instructions and JSON schema description will need to say, for example,
+"quote within a single source line" or "preserve line breaks and indentation
+exactly (as `\n` plus spaces in JSON)". Otherwise, Run 1 may produce validation
+failures that come from the format, not from the agent's judgement. This is an
+Instructions-lever consideration for the manager when the Run 1 prompt is
+written.
+
+#### Still unresolved
+
+1. pytest has not been run (ENV-1).
+2. Free-text sections are reviewed by the manager (by decision).
+3. The Milestone 2 commit is pending manager approval.

@@ -59,9 +59,19 @@ Each requirement receives exactly one status.
 
 Every status other than `UNSUPPORTED` must cite its evidence:
 
-- **Location:** the section and role or entry in the CV (e.g. *Professional
-  experience → Software Engineer, Example Logistics Ltd*).
-- **Quote:** a short verbatim excerpt.
+- **Location:** the exact heading of the CV section that contains the quote,
+  copied as it appears in the supplied CV. The parent heading may be given
+  first, separated by `→`. For example:
+  `Professional experience → Software Engineer — Example Logistics Ltd *(fictional)*`,
+  or just `Software Engineer — Example Logistics Ltd *(fictional)*`. Matching
+  is exact: case, wording, dash characters (hyphen, en dash, em dash), spacing
+  and inline formatting such as `*` must be identical to the CV heading. Only
+  the `#` markers that make a line a heading are left out. A location that does
+  not match a heading in the CV is invalid.
+- **Quote:** a short excerpt copied verbatim from that section. Do not
+  paraphrase, shorten words, or join text from different places. Verbatim
+  means character-for-character source text, apart from surrounding whitespace
+  and platform line-ending differences.
 - **Reasoning:** one or two sentences on why the evidence earns this status.
 
 An `UNSUPPORTED` status must name what was searched for and confirm that it was
@@ -113,7 +123,14 @@ total            = mandatory_score + preferred_score + confidence_score
 ```
 
 If the job has no preferred requirements, the mandatory weight becomes 90.
-Round only the final total, to one decimal place.
+
+### Rounding
+
+The final total is rounded to one decimal place using **ROUND-HALF-UP**: a
+value exactly halfway between two one-decimal values rounds up (e.g. 56.25 →
+56.3, 53.75 → 53.8). The weighted components are **not** rounded before the
+total is calculated; only the final total is rounded. Fit bands apply to the
+rounded total.
 
 ### Fit bands
 
@@ -137,9 +154,9 @@ A job has 4 mandatory and 2 preferred requirements.
   → 70 × 0.625 = **43.75**
 - Preferred: PARTIALLY_SUPPORTED, UNSUPPORTED → credits 0.5 / 2
   → 20 × 0.25 = **5.0**
-- Evidence quality for the 6 requirements: A, A, B, C, B, C → 2.0 / 6
-  → 10 × 0.333… = **3.33**
-- Total = 52.08 → **52.1, Weak fit**
+- Evidence quality for the 6 requirements: A, A, B, C, B, C → 3.0 / 6
+  → 10 × 0.5 = **5.0**
+- Total = 43.75 + 5.0 + 5.0 = 53.75 → **53.8, Weak fit**
 
 ## 7. Required output sections
 
