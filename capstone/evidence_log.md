@@ -1616,3 +1616,84 @@ treat").
 removed, 40 added". The correct figures from
 `diff prompts/run1_prompt.md prompts/run2_prompt.md` are **6 lines removed, 44
 added**.
+
+### Milestone 5A — correction: provisional manifest source commits
+
+The manifest built in "Milestone 5A — Run 2 preparation" above (SHA-256
+`be7b543d…f995`) was **provisional**. It recorded `source_commit: null`, with a
+`source_state` of "uncommitted working tree …", for `evaluation_standard.md`
+and `run2_prompt.md`. Those two files had not been committed yet, so no commit
+could truthfully be cited.
+
+On manager review, the content was approved unchanged, including the CTX-1
+sentence about decision rule 5. The files were then committed, and the
+workspace and manifest were rebuilt from that commit. The final frozen manifest
+cites the committed Run 2 preparation state for every repository-derived file.
+The provisional manifest is superseded and no longer exists in the workspace;
+its record above is kept unchanged as history.
+
+### Milestone 5A — final provenance (Run 2 workspace frozen)
+
+**Date:** 2026-10-27
+
+**Run 2 preparation commit:** `bb46ccedd82b2df400fbce93725b7335d530b647`
+("Milestone 5A: prepare Run 2 context and instructions"). It commits
+`context/evaluation_standard.md`, `prompts/run2_prompt.md` and the Milestone 5A
+preparation entries. The staged diff was reviewed before committing. The
+committed blobs keep the approved hashes.
+
+**Rebuild:**
+- The five repository-derived files were re-copied with `git show bb46cce:<path>`
+  from the committed blobs, not the working tree.
+- `manifest.json` was regenerated.
+- `scratch/` was kept; it was empty before and after.
+
+**Final manifest:**
+- `source_commit`: `bb46ccedd82b2df400fbce93725b7335d530b647`, at the top level
+  and on **every** repository-derived entry.
+- No repository-derived entry has a null source commit. The remaining `null`
+  values are `created_in` for the four context files, plus the manifest's own
+  entry (its sha256, source commit and source path).
+- The `source_state` field has been removed.
+
+**Final workspace** (`/home/ngetich_flow/HamanLabs/agent-capstone-run2/`):
+
+| Entry | Mode | Role | Source path | SHA-256 |
+|-------|------|------|-------------|---------|
+| `candidate_cv.md` | 444 | evaluation_source | `context/candidate_cv.md` | `89b0b6b29087f460020a883c89701234bc1e2ab7491f6edc905632761bc5de29` |
+| `job_description.md` | 444 | evaluation_source | `context/job_description.md` | `7f44b76aa738882a78e1ad3a253027c1be4e363eac38bc63f5eb56427f2f57d2` |
+| `evaluation_standard.md` | 444 | evaluation_source | `context/evaluation_standard.md` | `d7627be481778bd0cdb6e5f3c4af15c5074290b291cd4dc793e5f16d56ed126c` (approved; unchanged) |
+| `irrelevant_reference.md` | 444 | excluded_source | `context/irrelevant_reference.md` | `4ac442942ee6258df236fa9ff8ca42fdd6568f30c5eebf3811b31a6b15ccc952` |
+| `run2_prompt.md` | 444 | instruction_file | `prompts/run2_prompt.md` | `24c1eff587bf5bd544210994ae9eaca714e9485dab34c8176f55daed44ee6e71` (approved; unchanged) |
+| `manifest.json` | 444 | audit_metadata | — | **`cf04767803155fbfeee5241b89c14979f6fbb4892c7b42a024bba7f0071185e4`** (recorded only here) |
+| `scratch/` | 755 | working_directory | — | empty |
+
+**Validation:**
+- `.venv/bin/python -m unittest discover -s tests` → `Ran 126 tests` … `OK`.
+- Run 1 revalidated → exit 0, **52.1, Weak fit**. The output is byte-identical
+  to `runs/run1/report_postfix.md`.
+- Run 1 hashes are unchanged in the repository and in the isolated workspace:
+  `assessment.json` `e4430998…a73c` and `trajectory.md` `244bd307…5a92`.
+  Provenance `hashes.sha256` passes.
+- The workspace holds exactly 6 files and 1 directory (`scratch/`, empty).
+  Neither `assessment.json` nor `trajectory.md` exists.
+- **Byte-for-byte:** each of the five copied files equals its blob at
+  `bb46cce` (`git show … | cmp -`).
+- Every manifest hash matches when recomputed. Every repository-derived entry
+  cites `bb46cce…`.
+
+**Leak scans:**
+- **`run2_prompt.md`:** each of "on-call", "on call", "product manager",
+  "hidden requirement", "hidden test", "deliberate trap", "answer key",
+  "expected result", "expected score" and "Candidate A" has count **0**.
+- **Whole workspace:** no repository name, absolute path, `HamanLabs`,
+  "run 1", "run1", diagnosis terms, finding IDs, "draft", "subject to
+  revision", "iteration" or "hidden".
+- Hits that were expected:
+  - "on-call", "product manager" and "manager" occur only in
+    `job_description.md` (source text, not prompt leakage);
+  - "Candidate A" occurs only in `candidate_cv.md`;
+  - "run2" occurs in the prompt's own filename and in the manifest;
+  - "Milestone" occurs only in the manifest's `created_in` labels.
+
+**Run 2 status:** NOT executed. No semantic agent has seen the workspace.
