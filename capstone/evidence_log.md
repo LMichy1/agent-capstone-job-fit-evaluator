@@ -1857,3 +1857,62 @@ prompt, workspace design and kickoff message), not to `run2_prompt.md` alone.
 **Manager conclusion:** Run 2 is accepted as the improved assessment. Success
 is judged on coverage, ambiguity removal, workspace compliance, surfacing of
 the unsupported obligation and traceability, not on the higher score.
+
+---
+
+## Milestone 6 — Final capstone and defense package
+
+**Date:** 2026-10-27
+**Base commit:** `900f89a171d702a77213f3ea5b3c37b51272bd17` (Milestone 5)
+**Outputs** (both replace their Milestone 1 placeholders):
+- `capstone/final_report.md`: 16 sections, from task selection through to the
+  evidence index;
+- `capstone/defense_notes.md`: a one-minute summary, 25 interview questions
+  with spoken answers and memory anchors, and a rapid-fire fact sheet.
+
+**Not changed:** any run artifact, the scoring framework, the evaluation
+standard, the prompts and the context files. Neither semantic agent was rerun.
+Earlier evidence-log entries are not modified.
+
+**Score attribution used in both documents** (from the Milestone 5 in-memory
+sensitivity): 52.1 → 63.8 (M1) → 65.4 (P4) → 58.2 (+A1) → 61.8 (+A2). The
+increase is attributed to M1 and P4. A1 and A2 together lower the total by
+3.6. The fit band and the mandatory-gap signal are presented as separate
+signals.
+
+**Wording note:** `final_report.md` §2 describes the materials as "realistic
+… but synthetic", not "real". The CV and job description are deliberately
+synthetic and anonymised.
+
+**Final validation:** see the next entry.
+
+### Milestone 6 — final validation
+
+**Immutable hashes:** unchanged (`sha256sum -c`).
+- Run 1: `assessment.json` `e4430998…a73c`, `trajectory.md` `244bd307…5a92`.
+- Run 2: `assessment.json` `fdfdc789…086b`, `trajectory.md` `b1d2aaad…2ee3`,
+  `scratch/validate.py` `acd8fd7a…5824`.
+- Both provenance `hashes.sha256` files pass.
+
+**Revalidation:** each re-render is byte-identical to its stored report.
+- Run 1 → exit 0, **52.1 Weak fit**, no gap banner.
+- Run 2 → exit 0, **61.8 Moderate fit**, gap banner for A1.
+
+**Tests:** `.venv/bin/python -m unittest discover -s tests` → `Ran 126 tests`
+… `OK`.
+
+**Consistency check:** these figures agree across `final_report.md`,
+`defense_notes.md` and the three review documents:
+- totals 52.1, 61.8, 57.9, 63.8, 65.4 and 58.2;
+- components 35.00, 10.00, 7.08, 43.75, 11.67 and 6.43;
+- the −3.6 and +1.6 effects;
+- 126 tests;
+- 22 citations.
+
+Neither new document attributes the score increase to A1 or A2. Both state
+that pytest was not available and was not run.
+
+**Working tree before the commit:** only `capstone/final_report.md`,
+`capstone/defense_notes.md` and `capstone/evidence_log.md` changed. The
+`runs/run1/output.md` and `runs/run2/output.md` placeholders are untouched and
+not staged.
