@@ -95,6 +95,37 @@ sources. It must never be used as evidence about Candidate A.
 
 Work proceeds one milestone at a time, with a manager review after each.
 
+## Capstone Workflow
+
+1. **Context and workspace setup.** A synthetic context package (CV, job
+   description, evaluation standard and a deliberate distractor file) and an
+   isolation strategy. Each agent run works in its own external workspace that
+   holds only frozen, read-only inputs and a SHA-256 manifest.
+2. **Deterministic evaluation framework.** Python code (`src/`,
+   `scripts/run_evaluation.py`) that parses the inputs, checks every citation
+   against the CV (exact headings, verbatim quotes), calculates the score and
+   renders the report. It never decides whether evidence meets a requirement;
+   that judgment belongs to the agent.
+3. **Run 1.** A fresh agent assessed the candidate using
+   `prompts/run1_prompt.md`. Its assessment, trajectory and observable activity
+   are preserved unedited in `runs/run1/`.
+4. **Manager review and diagnosis.** Both the output and the trajectory were
+   reviewed. Each problem was classified as a Context, Workspace or
+   Instructions issue (INS-1, CTX-1, CTX-2, WS-1). A separate report-rendering
+   defect (CODE-1) was fixed in the framework. See `reviews/run1_review.md` and
+   `reviews/diagnosis.md`.
+5. **Run 2 and comparison.** Only the diagnosed levers were changed:
+   - an experience-duration rule and a rule for lists in parentheses, both in
+     the standard;
+   - a whole-job-description scope rule in `prompts/run2_prompt.md`;
+   - a sanctioned `scratch/` directory in the workspace.
+
+   A fresh agent then produced Run 2 (`runs/run2/`), compared with Run 1 in
+   `reviews/run_comparison.md`.
+6. **Final capstone and defense package.** `capstone/final_report.md` and
+   `capstone/defense_notes.md` summarise the experiment, its results and its
+   limitations. `capstone/evidence_log.md` holds the full milestone record.
+
 ## How agent iterations are preserved
 
 - **Frozen prompts.** The exact instructions for each run are saved in `prompts/`
