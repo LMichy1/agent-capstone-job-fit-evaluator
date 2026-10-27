@@ -143,6 +143,42 @@ Work proceeds one milestone at a time, with a manager review after each.
 - **Version control.** The repository is under git. Commits at milestone
   boundaries give a timestamped history of each stage.
 
+## Validation and Reproducibility
+
+- **Judgment and validation are separate.** The semantic agent decides each
+  requirement's status and evidence grade. The deterministic code validates the
+  submitted `assessment.json` (schema, coverage, exact CV headings, verbatim
+  quotes) and calculates the score. It makes no semantic judgments.
+- **Run artifacts are preserved.** Each run's `assessment.json`,
+  `trajectory.md`, rendered report and observable activity log are kept
+  unedited in `runs/run1/` and `runs/run2/`.
+- **Provenance uses SHA-256.** Each run workspace was frozen with a
+  `manifest.json` listing every input's hash and source commit. Preserved
+  outputs and scratch files are recorded in `runs/runN/provenance/hashes.sha256`
+  and in `capstone/evidence_log.md`.
+- **Tests:** the final suite has **126 passing `unittest` tests**:
+
+  ```bash
+  .venv/bin/python -m unittest discover -s tests
+  ```
+
+  pytest was not run, because it was unavailable in the environment.
+- **Results:**
+
+  | Run | Total | Fit band | Mandatory gap |
+  |-----|-------|----------|---------------|
+  | Run 1 | 52.1 | Weak fit | none |
+  | Run 2 | 61.8 | Moderate fit | A1 |
+
+  The fit band and the mandatory-gap signal are separate. Either run can be
+  re-scored from its preserved assessment:
+
+  ```bash
+  .venv/bin/python scripts/run_evaluation.py --job context/job_description.md \
+    --cv context/candidate_cv.md --assessment runs/run2/assessment.json \
+    --standard context/evaluation_standard.md
+  ```
+
 ## Requirements
 
 - Python 3.10+ (developed on 3.10.12; code must stay 3.10-compatible)
