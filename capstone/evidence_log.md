@@ -1697,3 +1697,163 @@ committed blobs keep the approved hashes.
   - "Milestone" occurs only in the manifest's `created_in` labels.
 
 **Run 2 status:** NOT executed. No semantic agent has seen the workspace.
+
+---
+
+## Run 2 — execution and preservation
+
+**Date:** 2026-10-27
+**Execution:** Run 2 was completed by a fresh semantic agent session
+(`caa178cd-07da-4f62-a594-3b20cf8cd301`), started in
+`~/HamanLabs/agent-capstone-run2`. Neither the implementation agent nor the
+Run 1 session executed it.
+
+**Kickoff message:** recorded verbatim in
+`runs/run2/provenance/activity_log.md`. It **differs from Run 1's**: it adds
+"Do not access or create anything outside this workspace. If you need helper
+scripts, temporary files, intermediate data, or validation artifacts, put them
+only inside `scratch/`." See the attribution limitation below.
+
+**Frozen inputs re-verified after the run** (all PASS, all still 444):
+- `run2_prompt.md` `24c1eff5…6e71`;
+- `evaluation_standard.md` `d7627be4…126c`;
+- `manifest.json` `cf047678…85e4`;
+- the CV, job description and irrelevant reference against the manifest.
+
+**Outputs:**
+
+| File | SHA-256 |
+|------|---------|
+| `assessment.json` | `fdfdc78982194394d9d96332850a7119a4e16ee9fe1d6fc19853b06e60ce086b` |
+| `trajectory.md` | `b1d2aaadc934bb50a6b7fdd637a42cccecadd22983fbe786a7408d40ddea2ee3` |
+| `scratch/validate.py` (retained by the agent) | `acd8fd7a30c9b67506ae7b17c9719fb5e73ae35ec5be81fd3000b8709e935824` |
+
+**Preservation (implementation agent):**
+- The three files above were copied with `cp -p` to `runs/run2/` and
+  `runs/run2/provenance/scratch/`; `cmp` silent, SHA-256 equal.
+- `runs/run2/trajectory.md` replaced the Milestone 1 placeholder.
+- `runs/run2/output.md`, a Milestone 1 placeholder, is left untouched.
+
+**Observable provenance (`runs/run2/provenance/`):**
+- `activity_log.md` `07e422fdff9c7e3708d6484a4c7294a75d5cf2cd8e2cf73edc94341784677304`;
+- `hashes.sha256` `f236eb2c79baf1776a3bdae9aed75a883deb1110f389f937ee7f63fdb015ba2e`
+  (`sha256sum -c` OK).
+
+The log was extracted from the transcript (`044c78ff…5ac1`, not copied) with
+the same exclusions as Run 1: no thinking, assistant prose, system prompts,
+cost or API data, or echoed file contents. It confirms:
+- 7 tool calls, all inside the workspace;
+- `irrelevant_reference.md` and `manifest.json` were not opened;
+- the heredoc in event 5 equals `scratch/validate.py`;
+- both Write calls equal the delivered files.
+
+**Harness artifact:** the harness created an empty session scratchpad at
+`/tmp/claude-1000/-home-ngetich-flow-HamanLabs-agent-capstone-run2/caa178cd-…/scratchpad`
+at 14:55:56, before the first tool call. It is still empty, as is `tasks/`, and
+no tool call references it. This is a harness artifact, **not an agent
+violation**.
+
+**Validation of the unedited assessment:**
+
+```
+.venv/bin/python scripts/run_evaluation.py --job context/job_description.md --cv context/candidate_cv.md --assessment runs/run2/assessment.json --standard context/evaluation_standard.md --output runs/run2/report.md
+```
+
+- Exit **0**; stderr empty.
+- stdout: `Wrote runs/run2/report.md (total 61.8, Moderate fit)`.
+- Mandatory 43.75 (5.0/8), preferred 11.67 (3.5/6), evidence quality 6.43
+  (9.0/14) → **61.8, Moderate fit**.
+- **Mandatory gap: A1.**
+- `report.md` SHA-256: `1b380ef72109e9bc404645e42ce9d4725bae45e1b98b121c7c25e4f0a403aa6a`.
+
+**Additional requirements (2):**
+- **A1** (mandatory). Source quote "- Take part in the team's on-call rotation
+  (roughly one week in six)." Assessed **UNSUPPORTED/C**.
+- **A2** (mandatory). Source quote "- **Location:** Remote (EMEA time zones)".
+  Assessed **SUPPORTED/B**, with CV evidence "- **Location:** Remote, EMEA".
+
+## Milestone 5 — Run 1 vs Run 2 comparison
+
+**Date:** 2026-10-27
+**Output:** `reviews/run_comparison.md`, which replaces the Milestone 1
+placeholder.
+
+**Re-verification:**
+- All four immutable output hashes and the scratch hash match.
+- Both validator runs exit 0: Run 1 → **52.1 Weak fit**, no mandatory gap;
+  Run 2 → **61.8 Moderate fit**, mandatory gap A1.
+- Each re-render is byte-identical to the stored report
+  (`runs/run1/report_postfix.md` and `runs/run2/report.md`).
+
+**Factual differences, Run 1 → Run 2:**
+- **M1:** UNCLEAR/B → SUPPORTED/B.
+- **P4:** PARTIALLY_SUPPORTED/B → SUPPORTED/B.
+- **A1:** absent → UNSUPPORTED/C.
+- **A2:** absent → SUPPORTED/B.
+- The other 10 numbered requirements are identical in status and grade
+  (checked, not assumed).
+- Additional requirements: 0 → 2.
+- Total: 52.1 Weak → 61.8 Moderate.
+- Mandatory gap: none → A1.
+
+**Score attribution** (in-memory sensitivity; no file changed):
+
+| Step | Total |
+|------|-------|
+| Run 1 | 52.1 |
+| + M1 | 63.8 |
+| + P4 | 65.4 |
+| + A1 | 58.2 |
+| + A2 (= Run 2) | 61.8 |
+
+The two additional requirements together lowered the total by 3.6. The whole
+increase comes from M1 and P4. The mandatory gap is reported separately from
+the band.
+
+**Intervention outcomes:**
+
+| Lever | Outcome | Basis |
+|-------|---------|-------|
+| CTX-1 | **Successful intervention** | M1's rationale applies the calendar-duration rules explicitly; hours are "not needed since full-time equivalence is not required" |
+| CTX-2 | **Successful stabilisation / no status change** | P5's rationale: "a bare comma-separated list, treated as cumulative scope"; no longer an interpretation problem |
+| INS-1 | **Successful intervention** | Run 1 saw the material but excluded it as unnumbered; Run 2 represented A1 and A2 structurally and gave reasons for every exclusion |
+| WS-1 | **Successful process intervention, with an attribution limitation** | Run 1 used outside-workspace scripts; Run 2 used only `scratch/validate.py` |
+| CODE-1 | **Successful framework fix** | Run 2's real gap renders in the banner, the row and the subsection; Run 1's report has none |
+
+**Kickoff-message attribution limitation (WS-1):** the Run 2 kickoff message
+itself told the agent to put helper files only in `scratch/`. The WS-1
+improvement is therefore attributed to the **combined** Run 2 setup (frozen
+prompt, workspace design and kickoff message), not to `run2_prompt.md` alone.
+
+**P4 — untargeted judgment variance:**
+- Same evidence and rules in both runs.
+- Run 1 read "helped" as partial and applied rule 1; Run 2 read "mentoring or
+  onboarding" as alternatives.
+- Run 2's wording echoes the CTX-2 "or" rule, but that rule covers only
+  parenthetical lists. A spillover cannot be distinguished from ordinary
+  variance with one run each.
+- Not claimed as an improvement (+1.6 points).
+
+**Residual scope issues:**
+- **A1 type.** Run 2 applied the standard's ambiguity rule (type ambiguous →
+  mandatory) and recorded the ambiguity, so it followed the written rule. The
+  standard does not say explicitly that items in neither list are
+  "ambiguous", so the reading is sound but inferred. Minor wording residual.
+- **A2 scope: defensible but debatable.** It is an explicit working
+  condition, but it comes from the header metadata block, where Run 2 treated
+  sibling lines as descriptive. As a SUPPORTED mandatory item it raises the
+  total (58.2 without it). The scope boundary was also applied unevenly:
+  in-person team weeks and the product-manager duty were excluded while
+  on-call was included. Recorded as a residual INS-1 scope-calibration issue,
+  not an over-expansion.
+
+**Other limitations:**
+- one run per configuration;
+- the kickoff message is not frozen with the workspace;
+- isolation is procedural;
+- the grade-B cap for education and personal details, and the P1 tension, are
+  unchanged by design.
+
+**Manager conclusion:** Run 2 is accepted as the improved assessment. Success
+is judged on coverage, ambiguity removal, workspace compliance, surfacing of
+the unsupported obligation and traceability, not on the higher score.
