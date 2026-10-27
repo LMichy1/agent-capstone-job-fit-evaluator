@@ -55,6 +55,37 @@ Each requirement receives exactly one status.
 6. "Present" is interpreted relative to the CV's stated last-updated date, not
    today's date. If the CV has no date, duration is `UNCLEAR`.
 
+### Experience-duration requirements
+
+When a requirement sets a minimum amount of experience (for example "at least
+N years"), count it as follows.
+
+- Unless the job description explicitly requires full-time-equivalent
+  experience, qualifying professional experience is counted by calendar
+  duration.
+- Part-time professional employment counts when the relevant work is
+  evidenced.
+- Do not convert part-time work to full-time equivalent unless the requirement
+  explicitly calls for full-time-equivalent experience.
+- A role does not become uncertain merely because the CV does not explicitly
+  label it full-time.
+- Do not double-count overlapping calendar periods.
+- Interpret "Present" using the CV's stated last-updated date.
+- Count only periods where the relevant type of work is actually supported by
+  the CV.
+
+Decision rule 5 still applies: part-time, overlapping and internship periods are
+named in the reasoning rather than counted silently.
+
+### Lists in parentheses
+
+When a requirement includes a list in parentheses, interpret it as follows.
+
+- "e.g." and "such as" introduce examples. The list is non-exhaustive.
+- "or" introduces alternatives.
+- A bare comma-separated list inside parentheses is cumulative listed scope,
+  unless the grammar clearly signals examples.
+
 ## 4. Evidence citation
 
 Every status other than `UNSUPPORTED` must cite its evidence:

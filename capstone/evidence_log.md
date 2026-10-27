@@ -1477,3 +1477,142 @@ The standard, the prompt and the job description are unchanged.
 
 **Commit:** "Milestone 4: review and diagnose Run 1". Run 2 has not been
 started, and no Run 2 workspace exists.
+
+---
+
+## Milestone 5A — Run 2 preparation
+
+**Date:** 2026-10-27
+**Agent role:** Implementation agent. **Run 2 has NOT been executed.** The Run 1
+agent session was not used.
+**Base commit:** `238fb830c9131b6fd4495354f2a049f0e5e12d7f` (Milestone 4). All
+changes below are **uncommitted**.
+**Levers changed:** CTX-1, CTX-2, INS-1 and WS-1 only. CODE-1 is untouched;
+validation exposed no regression.
+
+### Context changes (`context/evaluation_standard.md`; insertions only, 31 lines, 0 deletions)
+
+Two subsections were inserted in §3, after decision rule 6. No existing line
+changed.
+
+| Change | Lever |
+|--------|-------|
+| `### Experience-duration requirements`: (1) calendar duration unless the job description explicitly requires full-time equivalent; (2) part-time professional employment counts when the relevant work is evidenced; (3) no conversion to full-time equivalent unless explicitly required; (4) no uncertainty merely because a role is not labelled full-time; (5) no double-counting of overlapping periods; (6) "Present" = the CV's last-updated date; (7) count only periods where the relevant type of work is supported. Closing sentence: "Decision rule 5 still applies: part-time, overlapping and internship periods are named in the reasoning rather than counted silently." | CTX-1 |
+| `### Lists in parentheses`: "e.g." / "such as" introduce non-exhaustive examples; "or" introduces alternatives; a bare comma-separated list in parentheses is cumulative listed scope unless the grammar clearly signals examples. | CTX-2 |
+
+- **The closing sentence of the CTX-1 subsection is my own reconciling
+  wording.** Rule 5 ("flagged, not counted silently as full-time years") could
+  otherwise be read as conflicting with calendar counting. It adds no new
+  policy. Flagged for the manager.
+- **Not mentioned:** any candidate, requirement ID or expected result.
+- **Unchanged:** weights, credits, grades, bands, rounding, citation rules,
+  the CV, the job description and `irrelevant_reference.md`. `git diff` of
+  `context/` touches only the standard, with 0 deleted lines.
+
+### Instruction changes (`prompts/run2_prompt.md`, from a byte-identical copy of `run1_prompt.md`)
+
+| Location | Change | Lever |
+|----------|--------|-------|
+| §1 | New **Scope** paragraph. Every explicit obligation, condition or qualification anywhere in the job description must be considered. Numbered requirements keep their IDs. Relevant items outside the numbered lists go into `additional_requirements` (`A1`, `A2`, …) with a verbatim `source_quote`, a mandatory or preferred type based on the wording, and their own assessment. Deliberate non-treatment is recorded with a reason in `trajectory.md`. | INS-1 |
+| §4.1 | "`additional_requirements` is optional. Leave it as `[]` if you do not use it." → "Use `additional_requirements` as described under **Scope** in section 1. Leave it as `[]` only if no requirement outside the numbered lists is assessed." | INS-1 |
+| §7 item 10 (new) | Trajectory section: "Job description items outside the numbered lists". | INS-1 |
+| §2 bullets (new) | All working files and artifacts stay inside the workspace; helper files only in `scratch/`; no harness scratchpads, `/tmp`, home directory, other repositories or other outside locations; no web; no external applications. | WS-1 |
+| §2 table | `run1_prompt.md` → `run2_prompt.md`; `scratch/` row added; the `manifest.json` row now starts "**Do not use.**" | WS-1 / Run 2 file reference |
+| §2 (new paragraph) | "You may use only `candidate_cv.md`, `job_description.md` and `evaluation_standard.md` … `irrelevant_reference.md` and `manifest.json` are present … you may see them, but you must not use them." | Source policy (Part 4), part of the workspace rules |
+| §3 | "do not create any other files" → "Do not create any other files outside `scratch/`. You may create files inside `scratch/` during the run." | WS-1 |
+| §7 item 11 (new) | Trajectory section: "Scratch files": each file, why it was created, retained or deleted; "None" if there were none. | WS-1 |
+| §8 item 4 | Final check now allows `scratch/` files and confirms nothing was written outside the workspace. | WS-1 |
+
+- **Unchanged from Run 1:** sections 4.1 (template), 4.2 (validation rules), 5
+  (quote rule) and 6 (assessment quality), and trajectory items 1–9. The prompt
+  still asks for no private reasoning. Diff: 3 lines removed, 40 added.
+- The sentence "Do not use the web." appears both in the original §2 sentence
+  (kept unchanged) and as the explicitly required WS-1 bullet.
+
+### Run 2 workspace
+
+**Path:** `/home/ngetich_flow/HamanLabs/agent-capstone-run2/`. Its parent holds
+no repository.
+
+| Entry | Mode | SHA-256 | Role |
+|-------|------|---------|------|
+| `candidate_cv.md` | 444 | `89b0b6b29087f460020a883c89701234bc1e2ab7491f6edc905632761bc5de29` | evaluation_source (unchanged since Run 1) |
+| `job_description.md` | 444 | `7f44b76aa738882a78e1ad3a253027c1be4e363eac38bc63f5eb56427f2f57d2` | evaluation_source (unchanged) |
+| `evaluation_standard.md` | 444 | `d7627be481778bd0cdb6e5f3c4af15c5074290b291cd4dc793e5f16d56ed126c` | evaluation_source (**changed**; Run 1 used `7fa9e229…b045`) |
+| `irrelevant_reference.md` | 444 | `4ac442942ee6258df236fa9ff8ca42fdd6568f30c5eebf3811b31a6b15ccc952` | excluded_source (unchanged) |
+| `run2_prompt.md` | 444 | `24c1eff587bf5bd544210994ae9eaca714e9485dab34c8176f55daed44ee6e71` | instruction_file |
+| `manifest.json` | 444 | `be7b543d1ba5b5cf380c856b2f4432527bc95ae43126cdeeb9b2930018abf995` | audit_metadata (its own hash is recorded only here) |
+| `scratch/` | 755 | — | working_directory (empty) |
+
+**Manifest provenance:**
+- `candidate_cv.md`, `job_description.md` and `irrelevant_reference.md` cite
+  `source_commit` `238fb83…`; `git diff` confirms each is unchanged since that
+  commit.
+- `evaluation_standard.md` and `run2_prompt.md` have `source_commit: null` and
+  `source_state` set to "uncommitted working tree based on 238fb83…; the sha256
+  value is authoritative". This is because Milestone 5A is not committed yet.
+- Source paths are repository-relative (`context/…`, `prompts/…`). The absolute
+  repository path is deliberately left out of the workspace and recorded only
+  here: `/home/ngetich_flow/voltdevlabs/agent-capstone-job-fit-evaluator`.
+
+**Scratch-directory policy:** `scratch/` is the only writable location
+sanctioned for helper files. It starts empty and is captured as evidence after
+the run. The trajectory must list each scratch file, its purpose, and whether
+it was retained or deleted. The six files are read-only. The workspace root
+stays writable so that the two deliverables can be created.
+
+### Validation
+
+1. `.venv/bin/python -m unittest discover -s tests` → `Ran 126 tests` … `OK`.
+2. Run 1 revalidated with the **updated** standard → exit 0, **52.1, Weak fit**.
+   The output is byte-identical to `runs/run1/report_postfix.md`. The standard's
+   scoring tables still match the evaluator.
+3. Run 1 hashes are unchanged in the repository and in the isolated workspace:
+   `assessment.json` `e4430998…a73c` and `trajectory.md` `244bd307…5a92`.
+   Provenance `hashes.sha256` passes `sha256sum -c`.
+4. Semantic-context changes are limited to the two subsections above (0
+   deleted lines; only the standard changed).
+5. The prompt diff is limited to INS-1, WS-1, the source policy and the
+   Run 2 filename (table above).
+6. No specific unnumbered job-description duty is named or hinted at in
+   `run2_prompt.md` (see the leak check).
+7. The workspace holds exactly 6 files and 1 directory (`scratch/`).
+8. All four context files and the prompt are byte-identical (`cmp`) to the
+   repository working tree.
+9. Every manifest hash matches when recomputed.
+10. Neither `assessment.json` nor `trajectory.md` exists.
+11. `scratch/` is empty.
+
+### Leak checks
+
+**`run2_prompt.md`, case-insensitive:** each of the following has count **0**:
+"on-call", "on call", "product manager", "hidden requirement", "hidden test",
+"deliberate trap", "answer key", "expected result", "expected score",
+"Candidate A". Also 0: "responsibilit", "rotation", "hidden", "test case",
+"run 1", "run1", "milestone", "manager", "previous run". "deliberate" occurs 4
+times: 2 in the Run 1 trajectory wording ("deliberately did not use",
+"deliberately avoided") and 2 in the INS-1 wording ("deliberately do not
+treat").
+
+**Whole-workspace sweep:**
+- No repository name, absolute path, `HamanLabs`, "run 1", "run1", review or
+  diagnosis terms, finding IDs, "draft" or "subject to revision" appear in
+  any file.
+- Hits that were expected:
+  - "on-call", "product manager" and "manager" occur only in
+    `job_description.md` (source text);
+  - "Candidate A" and "review" occur in the source files;
+  - "previous" occurs in `irrelevant_reference.md`;
+  - "run2" occurs in `run2_prompt.md` (its own filename) and in
+    `manifest.json` (the workspace name and filenames);
+  - "Milestone" occurs only in `manifest.json` (`created_in: "Milestone 5A"`),
+    the same accepted pattern as Run 1.
+- **Residual exposure:** the filename `run2_prompt.md` implies an earlier
+  run. This is unavoidable under the required naming.
+
+**Run 2 status:** NOT executed. No semantic agent has seen the workspace.
+
+**Correction (appended):** the instruction-changes note above says "Diff: 3 lines
+removed, 40 added". The correct figures from
+`diff prompts/run1_prompt.md prompts/run2_prompt.md` are **6 lines removed, 44
+added**.
