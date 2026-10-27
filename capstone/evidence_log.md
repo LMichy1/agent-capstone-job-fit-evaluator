@@ -1167,3 +1167,66 @@ been executed, so the corrected file is the first version any run will see.
 - `python -m unittest discover -s tests` → `Ran 118 tests` … `OK`.
 - CLI, valid fixture with `--standard` → exit 0, **53.8, Weak fit**, all 8
   sections. The scoring tables still match the evaluator.
+
+### Milestone 3A — final provenance (after LEAK-1 correction)
+
+**Date:** 2026-10-27
+**Status:** Workspace rebuilt from the sanitised commit and fully re-validated.
+**Run 1 has NOT been executed.** The earlier entries above (initial
+preparation, LEAK-1 discovery and correction) are kept as written; this entry
+supersedes their hash values.
+
+**Source commit:** `729cff5b0dce988f93d9963900ab4d5548f599c1` (`729cff5`,
+"Sanitize evaluation context before Run 1"). It replaces `0beeff5` as the
+workspace source.
+
+**Rebuild:**
+- The four context files were re-copied from the committed blobs
+  (`git show HEAD:context/<file>`).
+- `manifest.json` was regenerated with the new `source_commit`.
+- `run1_prompt.md` was **not** touched; the regeneration script checked its
+  hash before writing.
+- All six files were set back to read-only (`444`).
+
+| File | SHA-256 | Change vs. initial M3A build |
+|------|---------|------------------------------|
+| `candidate_cv.md` | `89b0b6b29087f460020a883c89701234bc1e2ab7491f6edc905632761bc5de29` | unchanged |
+| `job_description.md` | `7f44b76aa738882a78e1ad3a253027c1be4e363eac38bc63f5eb56427f2f57d2` | unchanged |
+| `evaluation_standard.md` | `7fa9e229a2342632340ab82a1ec5cc3ff7ab195313873008269d83fd1bddb045` | **updated** (was `ccedfeea…3318`) |
+| `irrelevant_reference.md` | `4ac442942ee6258df236fa9ff8ca42fdd6568f30c5eebf3811b31a6b15ccc952` | unchanged |
+| `run1_prompt.md` | `2f4422727209b8212ca7941aa4375c38c66a7e35acd533d15869acd4ca8b5f9c` | **unchanged** (approved, frozen) |
+| `manifest.json` | `211848ce9766656227f8743bbe550725e5363f3996d4437b3d65cbc0346eb977` | **updated** (was `6cd48697…0280`); its own hash is recorded here |
+
+**Repository copy of the prompt:** the Milestone 1 placeholder
+`prompts/run1_prompt.md` was replaced by a byte-for-byte copy of the approved
+workspace prompt. Its SHA-256 is `2f4422727209b8212ca7941aa4375c38c66a7e35acd533d15869acd4ca8b5f9c`
+(identical), and `cmp` confirms it matches.
+
+**Validation after the rebuild:**
+- exactly six files, zero subdirectories (hidden entries included);
+- the four context files are byte-for-byte identical (`cmp`) to the blobs at
+  `729cff5`;
+- every embedded manifest hash matches when recomputed with `sha256sum`, and
+  the manifest's `source_commit` equals HEAD;
+- the prompt hash is unchanged;
+- no `assessment.json` and no `trajectory.md`.
+
+**Final leak scan of all workspace files (case-insensitive):**
+
+| String | Count |
+|--------|-------|
+| "Milestone 1" | 0 |
+| "Milestone 2" | 0 |
+| "subject to revision after Run 1" | 0 |
+| "answer key" | 0 |
+| "hidden test" | 0 |
+| "deliberate trap" | 0 |
+
+- **Supplementary:** "Run 1", "Run 2", "draft", "subject to revision" and the
+  repository name or path appear in no workspace file. "Milestone" appears only
+  in `manifest.json` (`"created_in": "Milestone 3A"`), a provenance label
+  the manager required and accepted under isolation limitation 3.
+- **"on-call"** appears only in `job_description.md`. It is the unchanged
+  source text, not a leak.
+
+**Run 1 status:** NOT executed. No semantic agent has seen the workspace.
