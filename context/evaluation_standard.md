@@ -1,10 +1,10 @@
 # Evaluation Standard — Job Fit Assessment
 
-**Version:** 0.1 (Milestone 1 draft, initial model, subject to revision after Run 1)
+**Version:** 0.1
 
 This standard defines how a candidate is assessed against a job description. It
-applies to both human reviewers and the agent. The scoring engine that applies it
-is built in Milestone 2.
+applies to both human reviewers and the agent. Scores are calculated from the
+recorded statuses and evidence grades using the scoring model in section 6.
 
 ## 1. Core rule: no fabrication
 
@@ -88,7 +88,7 @@ confidence component of the score.
 | **B** | Indirect or weaker evidence: a personal project, education, part-time or internship context, or vague wording. | 0.5 |
 | **C** | Skills-list keyword only, or no evidence. | 0.0 |
 
-## 6. Scoring model (initial)
+## 6. Scoring model
 
 The total score is out of 100 and has three components.
 

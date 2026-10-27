@@ -957,3 +957,213 @@ written.
 1. pytest has not been run (ENV-1).
 2. Free-text sections are reviewed by the manager (by decision).
 3. The Milestone 2 commit is pending manager approval.
+
+---
+
+## Milestone 3A — Run 1 workspace preparation
+
+**Date:** 2026-10-27
+**Status:** Workspace prepared and validated, awaiting manager review. **Run 1
+has NOT been executed**, and no candidate evaluation was performed by the
+implementation agent. Nothing has been committed.
+
+### Location
+
+- **Workspace:** `~/HamanLabs/agent-capstone-run1/`, created fresh. It did
+  not exist before (verified), so nothing was overwritten.
+- **Why there:** it sits outside the repository tree, and its parent
+  (`~/HamanLabs/`) contains nothing else. An `ls ..` from the workspace
+  therefore shows no repository. A sibling directory inside the repository's
+  parent folder would have listed the repository next to it.
+- **Reusable form:** to recreate, make an empty directory outside the
+  repository, copy the four `context/` files at the recorded commit, add the
+  frozen prompt, and regenerate the manifest.
+
+### Source commit
+
+`0beeff55ac2b249459c18254a23b079462fb44f0` (`0beeff5`, "Milestone 2: implement
+deterministic evaluation framework"). The working tree was clean at copy time.
+
+### Files included (exactly six; no directories)
+
+| File | Role | SHA-256 | Source |
+|------|------|---------|--------|
+| `candidate_cv.md` | evaluation_source | `89b0b6b29087f460020a883c89701234bc1e2ab7491f6edc905632761bc5de29` | `context/candidate_cv.md` @ `0beeff5` |
+| `job_description.md` | evaluation_source | `7f44b76aa738882a78e1ad3a253027c1be4e363eac38bc63f5eb56427f2f57d2` | `context/job_description.md` @ `0beeff5` |
+| `evaluation_standard.md` | evaluation_source | `ccedfeea9a0ad52fd71159c062bce3274a80349b6bb625cfd5fe8fda23573318` | `context/evaluation_standard.md` @ `0beeff5` |
+| `irrelevant_reference.md` | excluded_source | `4ac442942ee6258df236fa9ff8ca42fdd6568f30c5eebf3811b31a6b15ccc952` | `context/irrelevant_reference.md` @ `0beeff5` |
+| `run1_prompt.md` | instruction_file | `2f4422727209b8212ca7941aa4375c38c66a7e35acd533d15869acd4ca8b5f9c` | Created in Milestone 3A; **frozen** |
+| `manifest.json` | audit_metadata | `6cd486974af93e11e59f1b481a0b3a0dbeac99d5079677ee82a694024b9a0280` | Created in Milestone 3A; its own hash is recorded here because a file cannot contain its own hash |
+
+All six files are read-only (`chmod 444`), so an agent session cannot silently
+alter its inputs. The directory stays writable so that the run can create
+`assessment.json` and `trajectory.md`.
+
+### Files intentionally excluded
+
+`README.md`, `.gitignore`, `requirements.txt`, `pytest.ini`, `.git/`,
+`capstone/` (including this log), `reviews/`, `runs/`, `prompts/`, `src/`,
+`tests/` (including the fixtures), `scripts/`, `.venv/`. No manager notes,
+answer keys, milestone history, or other runs' prompts or outputs were copied,
+and none exist in the repository to copy.
+
+### Prompt design (run1_prompt.md)
+
+- **Source boundary:** the CV, job description and standard may be used.
+  `irrelevant_reference.md` may be seen but must not be used, and the prompt says
+  explicitly that it must not be used as evidence or context. The workspace
+  boundary sentence is included verbatim, and the prompt adds "Do not use the
+  web".
+- **Output:** exactly two new files, `assessment.json` and `trajectory.md`;
+  existing files must not be modified.
+- **JSON shape and validation rules** match the framework exactly:
+  - The template's field names were checked programmatically against the
+    parser's key sets (top level, assessment, evidence, `sources_excluded` and
+    `additional_requirements` items), and `schema_version` = 1. All match.
+  - The prompt states the validator's rules: no unknown fields, full and
+    non-duplicated coverage, status/grade/evidence consistency, an UNCLEAR
+    verification question, the `A1…` ID pattern, exact locations and verbatim
+    quotes.
+  - Scores are excluded from the JSON, because the framework calculates them.
+- **`additional_requirements`** appears in the template as `[]`, with a neutral
+  description of its shape: optional, and anything listed must also be
+  assessed. The prompt gives no explanation of its purpose and no instruction to
+  look for further requirements.
+- **Quote rule:** every element the manager required is present. It includes an
+  illustration using **invented** text (not Candidate A's), and all four
+  accept/reject verdicts in that illustration were confirmed against the real
+  validator.
+- **Trajectory:** nine required sections of concise decision records and
+  observable steps. Private internal reasoning is explicitly not requested.
+- **Quality rules:** no fabricated experience, years, technologies,
+  certifications or metrics; evidence-backed statuses; explicit uncertainty;
+  compliance with the standard.
+- **Freeze:** the prompt was finalised before hashing. Its SHA-256 is recorded
+  in the manifest and above, and it is not to be modified unless the manager
+  rejects Milestone 3A.
+
+### Validation performed
+
+1. **Tree:** 6 files and 0 directories, including hidden entries.
+2. **File set:** exactly the six expected files.
+3. **Subdirectories:** none.
+4. **Prompt leak check:**
+   - "hidden test", "on-call", "deliberate trap", "answer key", "Milestone 1"
+     and "Milestone 2" each occur **0** times (case-insensitive).
+   - A broader scan found no "hidden", "embedded", "trap", "distractor",
+     "milestone", "capstone", "manager", "expected", "/home", repository name,
+     "Candidate A" or candidate-specific technologies.
+   - "deliberate" occurs twice, only in the manager-mandated trajectory headings
+     ("Assumptions deliberately avoided", "files you deliberately did not use").
+5. **irrelevant_reference.md prohibition:** present.
+6. **Workspace boundary sentence:** present verbatim.
+7. **Strict quote-formatting instructions:** all elements present.
+8. **SHA-256:** independently recomputed with `sha256sum`, not the Python that
+   generated the manifest. All five embedded hashes match; the manifest's own
+   hash is recorded above.
+9. **Byte-for-byte check:** with `cmp`, all four copied files are identical to
+   both the repository working tree and the committed `HEAD` blobs
+   (`git show HEAD:context/<file>`).
+10. **No evaluation run:** no `assessment.json` or `trajectory.md` exists.
+11. **Session context:** no `CLAUDE.md` exists in the home directory, its
+    ancestors or `~/.claude/`, and this repository's Claude memory directory is
+    empty. A fresh session started in the workspace therefore loads no
+    project-specific instructions or memory.
+
+### Finding raised for manager decision (no action taken)
+
+**LEAK-1: milestone history in the copied standard.** A sweep of **all**
+workspace files, not only the prompt, found that `evaluation_standard.md`
+(copied byte for byte, as required) contains:
+- line 3: "**Version:** 0.1 (Milestone 1 draft, initial model, subject to
+  revision after Run 1)";
+- line 7: "…is built in Milestone 2."
+
+These lines date from Milestone 1. They reveal no test design, answers or
+traps. They do tell the run agent that the work is staged, that this is "Run 1"
+and that the standard may be revised afterwards: a mild observer-effect risk.
+
+The leak checks the manager defined covered `run1_prompt.md` only, so this was
+not caught by them. The copy was not edited, because that would break byte
+equality with the source commit.
+
+Options:
+- **(a)** accept and record it;
+- **(b)** neutralise the two lines in `context/evaluation_standard.md` (a
+  context change before Run 1), commit, then re-copy and regenerate the
+  manifest. The frozen prompt is unaffected.
+
+(`job_description.md` also contains "on-call". That is the unchanged source
+material itself, not a leak.)
+
+### Remaining isolation limitations
+
+1. **Isolation is procedural, not enforced by a container.** A Claude Code
+   session started in the workspace has the user's normal filesystem
+   permissions and could read the repository by absolute path if it chose to.
+   The defences are:
+   - the location outside the repository, with an empty parent;
+   - no repository path or project name in any workspace file;
+   - the explicit boundary instruction;
+   - the manager's review of the run's trajectory and tool log for any access
+     outside the workspace.
+
+   Containers remain out of scope under the "no Docker" constraint.
+2. **The session must be started correctly.** The working directory must be
+   `~/HamanLabs/agent-capstone-run1/`, the session must be fresh with no
+   inherited conversation, and no `--add-dir` may point at the repository. It
+   must not be this implementation session, which knows the test design.
+3. **The manifest is visible to the agent.** It shows relative source paths
+   (`context/…`), the source commit and the label "Milestone 3A", as required.
+   These reveal provenance but not test design.
+4. **Read-only permissions are a guard, not a guarantee.** The file owner can
+   reverse `chmod`. Tampering is detectable by re-hashing against this log.
+5. **The prompt cannot be self-checked by the agent against the validator**,
+   because no code is in the workspace. Validation happens afterwards, when the
+   manager runs the repository CLI on the returned `assessment.json`.
+
+### Not done (by instruction)
+
+- Run 1 has not been executed. No `assessment.json` or `trajectory.md` exists,
+  and nothing has been copied into `runs/run1/`.
+- `prompts/run1_prompt.md` in the repository is still the Milestone 1
+  placeholder. Copying the frozen prompt into it, so that the repository record
+  matches SHA-256 `2f442272…5f9c`, is suggested for the manager's approval
+  alongside the Milestone 3A commit.
+
+### Milestone 3A — LEAK-1 correction (pre-Run-1 context sanitisation)
+
+**Date:** 2026-10-27
+**Manager decision:** LEAK-1 is accepted as a **pre-Run-1 CONTEXT issue** and
+is to be corrected before the semantic agent sees the material (option b).
+The frozen `run1_prompt.md` is approved unchanged (SHA-256
+`2f4422727209b8212ca7941aa4375c38c66a7e35acd533d15869acd4ca8b5f9c`).
+
+**Correction applied to `context/evaluation_standard.md` (metadata only):**
+
+| Line | Before | After |
+|------|--------|-------|
+| 3 | `**Version:** 0.1 (Milestone 1 draft, initial model, subject to revision after Run 1)` | `**Version:** 0.1` |
+| 6–7 | "The scoring engine that applies it is built in Milestone 2." | "Scores are calculated from the recorded statuses and evidence grades using the scoring model in section 6." |
+| 91 | `## 6. Scoring model (initial)` | `## 6. Scoring model` |
+
+- **Line 91 was outside the manager's search list.** I changed it on my own
+  judgement, because "(initial)" carries the same "will be revised" signal as
+  "subject to revision". It is a heading label, not a rule. Flagged for the
+  manager to confirm.
+- **Unchanged:** scoring rules, weights, status definitions, decision rules,
+  evidence grades, citation and verbatim rules, rounding, requirement
+  classification, the worked example and the output requirements.
+  `git diff` shows only the three lines above.
+- **No new wording** about hidden requirements, test cases, iteration,
+  experiments, later runs or manager review was added.
+- **Search:** "Milestone", "Run 1", "Run 2", "draft", "subject to revision" and
+  "initial" each occur 0 times in the standard (case-insensitive).
+
+**Timing:** the semantic agent has **not** seen either version. Run 1 has not
+been executed, so the corrected file is the first version any run will see.
+
+**Validation:**
+- `python -m unittest discover -s tests` → `Ran 118 tests` … `OK`.
+- CLI, valid fixture with `--standard` → exit 0, **53.8, Weak fit**, all 8
+  sections. The scoring tables still match the evaluator.
