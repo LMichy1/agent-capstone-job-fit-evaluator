@@ -199,3 +199,89 @@ scoring weights, UNCLEAR = zero credit, conservative tie-breaking, evidence-qual
 scoring and all deliberate test cases are unchanged. The overlap between
 evidence quality and status credit has been acknowledged and is deliberately left
 as-is until evaluator behaviour has been observed.
+
+---
+
+## Milestone 2 — Evaluation engine and rubric
+
+**Status:** Not started. This section opens with a pre-milestone manager
+directive. Implementation entries will follow when Milestone 2 begins.
+
+### Decision M2-1: workspace isolation for semantic agent runs (manager-directed)
+
+**Date:** 2026-10-27
+
+**Problem.** The manager's review of Milestone 1 found that `README.md` and this
+evidence log describe the deliberate evaluation test cases (the embedded
+requirement fixture, the distractor file and the evidence-strength variants). A
+semantic agent run with access to the full repository could read them, which
+would invalidate Run 1 as a test of the agent's independent behaviour.
+
+**What is *not* done.** The historical evidence is not removed or rewritten.
+Milestone 1 entries in this log and in the README stay as committed in
+`a27f9ab`. Hiding the trail would weaken the capstone's audit value. The fix is
+to control access, not to edit history.
+
+**Decision.** There are two execution contexts with different access:
+
+| Context | Who | Access |
+|---------|-----|--------|
+| **Deterministic framework** | `src/`, `tests/`, `scripts/` (parsing, scoring arithmetic, report rendering) | The full repository. It applies fixed rules and makes no semantic judgements, so seeing test-case notes cannot bias it. |
+| **Semantic agent run** | The agent performing Run 1 / Run 2 (requirement extraction, evidence mapping, status judgements, positioning, brief) | **Only a restricted run workspace** whose contents are explicitly listed. |
+
+**Run-workspace source package (explicit allowlist).** Only these files are placed
+in a run workspace:
+
+- `context/candidate_cv.md`
+- `context/job_description.md`
+- `context/evaluation_standard.md`
+- `context/irrelevant_reference.md`. It is included on purpose: the distractor
+  test only works if the file is reachable. Whether the agent is told to ignore
+  it is a matter for the run prompt, not for workspace contents.
+- the run's own prompt (`prompts/runN_prompt.md`)
+
+Everything else is excluded by default, because the package is an allowlist, not
+a denylist. This explicitly covers:
+- `README.md`;
+- `capstone/` (including this log);
+- `reviews/` and `tests/`;
+- `src/` and `scripts/`, plus any implementation notes;
+- other runs' prompts, outputs and trajectories;
+- `.git/`, whose history contains all of the above;
+- any manager-only expected results, which are not in the repository anyway.
+
+**Design constraints for the future implementation** (to be built in Milestone
+3, not now):
+1. **Location.** The run workspace is created **outside the repository tree**,
+   so relative navigation (`..`) from the workspace cannot reach the repository.
+2. **Provenance.** The workspace includes a generated manifest listing each
+   copied file with its SHA-256 hash and the commit it came from. The
+   trajectory can then prove exactly what the agent could see.
+3. **Prompt hygiene.** The run prompt must not mention the repository's path,
+   the test-case design or the manager's expectations.
+4. **Fresh session.** The agent is started as a fresh session whose working
+   directory is the run workspace, with no inherited conversation context from
+   the implementation agent.
+5. **Returning outputs.** Outputs are written inside the run workspace and then
+   copied back unedited to `runs/runN/` by the framework or the manager, never
+   by the agent writing into the repository.
+
+**Residual risk.** Copy-based isolation stops *automatic* access, not
+*deliberate* access. An agent with general filesystem tools could still find the
+repository by absolute path. Mitigations: the workspace sits outside the
+repository, the prompt contains no repository path, and the manager's review of
+each trajectory checks for any read outside the workspace. Stronger sandboxing,
+such as containers or OS-level permissions, is out of scope under the "no
+Docker" constraint. If this leaves too much risk, it should be revisited in
+Milestone 3.
+
+**Effect on Milestone 2 architecture.** The scoring engine does not need a
+workspace helper, so none is built now. In Milestone 3, a small builder (a
+fixed allowlist constant plus a copy-and-manifest function, standard library
+only) is expected in `src/` or `scripts/`. Milestone 2 code will read context
+files through explicit paths passed in by the caller rather than scanning the
+repository, so the same parser can run unchanged inside a restricted workspace.
+
+**Note on the agent writing this entry.** I (the implementation agent) know the
+test-case design and therefore must not be the agent that performs the semantic
+runs. This is consistent with requirement 4 above.
