@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "candidate_id": "Candidate A",
+  "sources_inspected": [
+    "run1_prompt.md",
+    "candidate_cv.md",
+    "job_description.md",
+    "evaluation_standard.md"
+  ],
+  "sources_excluded": [
+    {
+      "path": "irrelevant_reference.md",
+      "reason": "Instructions state it must not be used; it was not opened."
+    },
+    {
+      "path": "manifest.json",
+      "reason": "Workspace audit metadata, not a source of candidate or role information; it was not opened."
+    }
+  ],
+  "additional_requirements": [],
+  "assessments": [
+    {
+      "requirement_id": "M1",
+      "status": "UNCLEAR",
+      "evidence_grade": "B",
+      "evidence": [
+        {
+          "location": "Candidate CV — Candidate A",
+          "quote": "**CV last updated:** June 2024"
+        },
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "**March 2022 – Present**"
+        },
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Built and maintained REST APIs with Django REST Framework for an internal"
+        },
+        {
+          "location": "Junior Developer (part-time, alongside final year of degree) — Example Pay Startup *(fictional)*",
+          "quote": "**January 2021 – February 2022**"
+        },
+        {
+          "location": "Junior Developer (part-time, alongside final year of degree) — Example Pay Startup *(fictional)*",
+          "quote": "- Developed Flask endpoints for a payments dashboard."
+        },
+        {
+          "location": "Software Engineering Intern — Example Analytics Co. *(fictional)*",
+          "quote": "**June 2020 – August 2020**"
+        }
+      ],
+      "rationale": "Python backend work is evidenced in professional roles (Django REST Framework at Example Logistics Ltd; Flask at Example Pay Startup). Interpreting 'Present' as the CV's last-updated date (June 2024), the Example Logistics Ltd role spans March 2022 – June 2024, about 2 years 3 months, which is below 3 years on its own. Reaching 3 years depends on the January 2021 – February 2022 role, which is explicitly part-time, and the June – August 2020 internship; the CV gives no hours, and the employment type of the Example Logistics Ltd role is not stated, so whether the 3-year threshold is met cannot be confirmed.",
+      "uncertainty": "Part-time hours for the Example Pay Startup role are not given, and the Example Logistics Ltd role is not stated to be full-time; full-time-equivalent Python backend experience cannot be calculated.",
+      "verification_question": "Was the Example Logistics Ltd role full-time, and roughly how many hours per week did you work in the part-time Example Pay Startup role, so that your total professional Python backend experience can be confirmed?"
+    },
+    {
+      "requirement_id": "M2",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Built and maintained REST APIs with Django REST Framework for an internal"
+        },
+        {
+          "location": "Junior Developer (part-time, alongside final year of degree) — Example Pay Startup *(fictional)*",
+          "quote": "- Developed Flask endpoints for a payments dashboard."
+        }
+      ],
+      "rationale": "Building and maintaining REST APIs in a professional role is directly evidenced. The requirement is compound ('designing and building'); the CV does not state that the candidate designed the APIs (the 'Designed' bullet refers to database schemas), so only the building part is evidenced.",
+      "uncertainty": "The candidate's role in API design (endpoints, contracts, versioning) is not described."
+    },
+    {
+      "requirement_id": "M3",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Designed PostgreSQL table schemas and wrote database migrations for new"
+        },
+        {
+          "location": "Junior Developer (part-time, alongside final year of degree) — Example Pay Startup *(fictional)*",
+          "quote": "- Wrote MySQL queries for reporting features."
+        }
+      ],
+      "rationale": "Relational database experience including schema design (PostgreSQL) and writing queries (MySQL) is directly evidenced in professional roles. The CV contains no evidence of query performance tuning (searched for tuning, optimisation, indexing, query plans, performance), so the compound requirement is only partly met.",
+      "uncertainty": "No information on query performance tuning or optimisation work."
+    },
+    {
+      "requirement_id": "M4",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Wrote unit tests with pytest for the API layer and significantly improved test"
+        },
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Set up a GitHub Actions workflow that runs the test suite on every pull request."
+        }
+      ],
+      "rationale": "Unit testing with pytest and setting up a CI pipeline (GitHub Actions) are directly evidenced in a professional role. Integration testing is not mentioned anywhere in the CV, so the 'unit and integration' part is only partly met. The phrase 'significantly improved test coverage' is vague and is not credited as a metric.",
+      "uncertainty": "Whether the candidate has written integration tests is unknown; the size of the coverage improvement is unstated."
+    },
+    {
+      "requirement_id": "M5",
+      "status": "SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Took part in code review for the team's pull requests."
+        },
+        {
+          "location": "Junior Developer (part-time, alongside final year of degree) — Example Pay Startup *(fictional)*",
+          "quote": "- Took part in code reviews using GitHub pull requests."
+        }
+      ],
+      "rationale": "Code review through pull requests is directly evidenced in two professional roles, including GitHub pull requests, which covers Git-based collaboration and code review."
+    },
+    {
+      "requirement_id": "M6",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Deployed services to AWS EC2 using a scripted release process."
+        }
+      ],
+      "rationale": "Deploying services to AWS (a public cloud provider) is directly evidenced in a professional role. Operating services in production (on-call, incident handling, monitoring, production support) is not described, so the 'deploying and operating' requirement is only partly met. The AWS Cloud Practitioner certification is in progress and is not credited.",
+      "uncertainty": "The extent of the candidate's responsibility for running services in production on AWS is not stated."
+    },
+    {
+      "requirement_id": "P1",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "B",
+      "evidence": [
+        {
+          "location": "Parcel Notifier *(personal project)*",
+          "quote": "- A side project that sends delivery notifications. Uses Celery and Redis for\n  background jobs, and runs locally with Docker Compose."
+        }
+      ],
+      "rationale": "Docker use is evidenced only through Docker Compose running locally on a personal project, which is a weaker context than production containerisation. 'Docker' also appears in the Skills list, but no professional or production use is described.",
+      "uncertainty": "Whether the candidate has used Docker or other containers in production is unknown."
+    },
+    {
+      "requirement_id": "P2",
+      "status": "UNCLEAR",
+      "evidence_grade": "C",
+      "evidence": [
+        {
+          "location": "Skills",
+          "quote": "GitHub Actions, AWS, Docker, Kubernetes, Kafka, Terraform, Redis, Celery, Linux."
+        }
+      ],
+      "rationale": "Kubernetes appears only as a keyword in the Skills list, with no supporting experience in any role or project. Under the standard, a skills-list keyword alone is UNCLEAR.",
+      "uncertainty": "No context for how or where Kubernetes was used.",
+      "verification_question": "Where have you used Kubernetes, and what did you do with it (e.g. writing manifests, deploying services, operating a cluster)?"
+    },
+    {
+      "requirement_id": "P3",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "B",
+      "evidence": [
+        {
+          "location": "Parcel Notifier *(personal project)*",
+          "quote": "- A side project that sends delivery notifications. Uses Celery and Redis for\n  background jobs, and runs locally with Docker Compose."
+        },
+        {
+          "location": "Skills",
+          "quote": "GitHub Actions, AWS, Docker, Kubernetes, Kafka, Terraform, Redis, Celery, Linux."
+        }
+      ],
+      "rationale": "Asynchronous task processing with Celery and Redis is evidenced only in a personal project, a weaker context than professional experience. Kafka appears only in the Skills list and is not credited.",
+      "uncertainty": "No professional use of message queues or task queues is described; Kafka experience is unverified."
+    },
+    {
+      "requirement_id": "P4",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "B",
+      "evidence": [
+        {
+          "location": "Junior Developer (part-time, alongside final year of degree) — Example Pay Startup *(fictional)*",
+          "quote": "- Helped onboard two interns to the codebase."
+        }
+      ],
+      "rationale": "The CV shows the candidate helped onboard two interns, in a part-time role. 'Helped' indicates a contributing rather than leading role and no mentoring is described, so applying the conservative rule this is partly supported; the part-time context gives grade B.",
+      "uncertainty": "The candidate's responsibility in the onboarding and any ongoing mentoring is not described."
+    },
+    {
+      "requirement_id": "P5",
+      "status": "PARTIALLY_SUPPORTED",
+      "evidence_grade": "A",
+      "evidence": [
+        {
+          "location": "Software Engineer — Example Logistics Ltd *(fictional)*",
+          "quote": "- Added structured JSON logging to the tracking service."
+        }
+      ],
+      "rationale": "Structured logging is directly evidenced in a professional role. Metrics and tracing tooling are not mentioned anywhere in the CV (searched role bullets, project and Skills list), so only part of the listed observability scope is evidenced.",
+      "uncertainty": "No evidence of metrics, tracing or monitoring tools."
+    },
+    {
+      "requirement_id": "P6",
+      "status": "SUPPORTED",
+      "evidence_grade": "B",
+      "evidence": [
+        {
+          "location": "Education",
+          "quote": "- **BSc Computer Science** — Example State University *(fictional)*, 2021."
+        }
+      ],
+      "rationale": "The CV lists a completed BSc in Computer Science (2021), which meets the requirement. Grade B is applied because the standard classes education evidence as grade B."
+    }
+  ],
+  "positioning": "Position Candidate A as a backend software engineer working mainly in Python who has built and maintained REST APIs with Django REST Framework for an internal shipment-tracking service used by three internal teams, designed PostgreSQL table schemas and wrote database migrations, wrote pytest unit tests and set up a GitHub Actions workflow running the test suite on every pull request, deployed services to AWS EC2 using a scripted release process, added structured JSON logging, and took part in code review via pull requests. The shipment-tracking domain overlaps with the role's shipment booking and tracking APIs. Supporting points: earlier Flask and MySQL work in a part-time role, helping onboard two interns, a BSc in Computer Science (2021), and a personal project using Celery, Redis and Docker Compose. No mandatory requirement is UNSUPPORTED, but the candidate should not claim 3+ years of full-time Python experience, API design ownership, query performance tuning, integration testing, production operations, production Docker, or Kubernetes/Kafka experience until these are verified.",
+  "application_brief": "Candidate A is a Python backend engineer at Example Logistics Ltd (March 2022 – present as of the June 2024 CV), where they built and maintained REST APIs with Django REST Framework for an internal shipment-tracking service used by three internal teams, designed PostgreSQL table schemas and wrote migrations, wrote pytest unit tests for the API layer, set up a GitHub Actions workflow that runs the test suite on every pull request, deployed services to AWS EC2 using a scripted release process, added structured JSON logging, and took part in code review. Before that, in a part-time role (January 2021 – February 2022), they developed Flask endpoints, wrote MySQL queries for reporting, reviewed GitHub pull requests and helped onboard two interns. They hold a BSc in Computer Science (2021) and have used Celery, Redis and Docker Compose on a personal project. Items to confirm: total full-time-equivalent Python experience against the 3-year requirement, API design, query performance tuning, integration testing, production operations on AWS, and Kubernetes.",
+  "uncertainties": [
+    "M1: total professional Python backend experience cannot be confirmed as 3 years; the main role spans about 2 years 3 months to the June 2024 last-updated date, and the earlier role is part-time with unstated hours.",
+    "'Present' was interpreted as June 2024 (the CV's last-updated date), as the standard requires, not today's date.",
+    "The Example Logistics Ltd role is not stated to be full-time.",
+    "Kubernetes, Kafka and Terraform appear only in the Skills list with no supporting experience.",
+    "'significantly improved test coverage' is vague and was not credited as a metric.",
+    "The AWS Certified Cloud Practitioner certification is in progress and was not treated as held.",
+    "P5 lists 'structured logging, metrics, tracing' in parentheses; it was treated conservatively as the scope of the requirement, so structured logging alone earns partial credit.",
+    "Responsibilities such as on-call rotation and working with product managers are not numbered requirements and were not assessed as additional requirements."
+  ]
+}
