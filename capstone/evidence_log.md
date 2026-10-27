@@ -1230,3 +1230,250 @@ workspace prompt. Its SHA-256 is `2f4422727209b8212ca7941aa4375c38c66a7e35acd533
   source text, not a leak.
 
 **Run 1 status:** NOT executed. No semantic agent has seen the workspace.
+
+---
+
+## Run 1 — execution provenance
+
+**Date:** 2026-10-27
+**Recorded by:** implementation agent, in Milestone 4. The implementation agent
+did **not** execute Run 1 and has not edited its outputs.
+
+**Execution:** Run 1 was completed by a separate agent session started in the
+isolated workspace `~/HamanLabs/agent-capstone-run1` (session
+`e110aae1-50e1-4845-9136-25eae7b88c20`). Its kickoff message told it to read
+`run1_prompt.md`, to work only within the workspace, and to create only the
+requested deliverables.
+
+**Frozen inputs:** all six re-verified against the hashes in "Milestone 3A —
+final provenance" before preservation. All PASS, all still mode 444.
+
+**Frozen outputs:**
+
+| File | SHA-256 |
+|------|---------|
+| `assessment.json` | `e44309982cb70671001960d8da6aa02c55eec1e0128d2f0b7aaf8d3aa695a73c` |
+| `trajectory.md` | `244bd30707ceeff88128f1b48a8b8e1373f3078e9c6671f83fc1cce831195a92` |
+
+**Repository copies:**
+- `runs/run1/assessment.json` and `runs/run1/trajectory.md` were **already
+  present** when preservation began, with timestamp 09:47. That is after the
+  run, which ended about 09:24.
+- Both are byte-identical to the isolated outputs (`cmp` silent; SHA-256 equal),
+  so they were not overwritten.
+- **Who initially copied them is unknown.** The implementation agent did not.
+  No record of the copy exists.
+
+**Validation of the unedited assessment:**
+
+```
+.venv/bin/python scripts/run_evaluation.py --job context/job_description.md --cv context/candidate_cv.md --assessment runs/run1/assessment.json --standard context/evaluation_standard.md --output runs/run1/report.md
+```
+
+- Exit code **0**; stderr empty.
+- stdout: `Wrote runs/run1/report.md (total 52.1, Weak fit)`.
+- **Total 52.1 / 100, Weak fit.** Components: mandatory 35.00, preferred 10.00,
+  confidence 7.08.
+- **No mandatory gap.**
+- **`additional_requirements`: `[]` (empty).**
+- `runs/run1/report.md` (pre-fix render) SHA-256:
+  `1564720149fb558094d746a1ec705bf355fe69f0c050b39aabff5e1aff822a55`. It is
+  kept unchanged as evidence of CODE-1.
+- `python` is not on PATH in this shell (pyenv shim), so `.venv/bin/python`
+  (3.10.12) was used.
+
+**Sources declared by the agent:**
+- **Inspected:** `run1_prompt.md`, `candidate_cv.md`, `job_description.md`,
+  `evaluation_standard.md`.
+- **Excluded:** `irrelevant_reference.md` ("Instructions state it must not be
+  used; it was not opened.") and `manifest.json` ("Workspace audit metadata …;
+  it was not opened.").
+
+**Verification against the session transcript (read-only):** the transcript
+holds six tool calls:
+1. `ls -la && cat run1_prompt.md`
+2. `cat -A candidate_cv.md`, `cat job_description.md`, `cat evaluation_standard.md`
+3. write and run `scratchpad/build.py`
+4. write and run `scratchpad/check.py`
+5. write `trajectory.md`
+6. `ls -la`
+
+Neither `irrelevant_reference.md` nor `manifest.json` was read; both were seen
+only as names in `ls -la`. The trajectory's steps match these calls
+one-for-one.
+
+**External scratchpad use, reported by the agent and confirmed:**
+
+| Item | Value |
+|------|-------|
+| Scratchpad | `/tmp/claude-1000/-home-ngetich-flow-HamanLabs-agent-capstone-run1/e110aae1-50e1-4845-9136-25eae7b88c20/scratchpad/` |
+| `build.py` | `2d8c5531b1b11b96a2b477e4bfb5e450db0df57966f458cc16c86fde1ad568b5` (90 lines). Writes `assessment.json` in the workspace. |
+| `check.py` | `8b30a35c43814f66f36bb0e17ee31d1d49181b84e2029b70150f2552c94ed5cd` (38 lines). Reads the workspace `candidate_cv.md` and `assessment.json`. |
+| Session transcript | `~/.claude/projects/-home-ngetich-flow-HamanLabs-agent-capstone-run1/e110aae1-50e1-4845-9136-25eae7b88c20.jsonl`, SHA-256 `c839f58b5d825e15b71a8c450a44663840d9e8c8fe84e61f7b0859442b691095` at time of review |
+| Run 1 memory directory | empty |
+
+Neither script reads any file outside the workspace. These files live in
+ephemeral `/tmp` and user-profile storage and have **not** been copied into the
+repository; preserving them is a manager decision.
+
+**Run 1 remains unedited.** No file in the isolated workspace or in
+`runs/run1/` (assessment, trajectory) has been modified.
+
+---
+
+## Milestone 4 — Run 1 review and diagnosis
+
+**Date:** 2026-10-27
+**Agent role:** Implementation agent (reviewer support). Run 2 not executed.
+**Outputs:** `reviews/run1_review.md` and `reviews/diagnosis.md`, which replace
+the Milestone 1 placeholders.
+
+**Manager acceptance:** Run 1 is accepted as the **baseline for comparison**.
+This does not endorse its conclusions.
+
+### Findings (recorded before any fix)
+
+| ID | Finding | Lever | Verified against |
+|----|---------|-------|------------------|
+| INS-1 | Explicit role obligations outside the numbered lists were seen but not assessed; `additional_requirements` is `[]`. The prompt defines the field's shape and calls it optional, with no rule for when it applies. | INSTRUCTIONS | trajectory §9; `uncertainties[7]`; M6 rationale; prompt §4.1 |
+| CTX-1 | The standard does not define how experience duration is counted (calendar, FTE, full-time only; internships; unstated employment type). M1 could be UNCLEAR, PARTIAL or SUPPORTED → 52.1 Weak / 57.9 Moderate / 63.8 Moderate (grade held at B; in-memory sensitivity check, no file changed). **Band-changing.** | CONTEXT | standard §3 status table and rule 5; M1 rationale; trajectory §9 |
+| CTX-2 | The P5 bare parenthetical list "(structured logging, metrics, tracing)" is ambiguous between examples, alternatives and scope. The job description uses "e.g." (M3, P3) and "or" (M6) elsewhere; standard rule 4 does not cover parentheticals. SUPPORTED would give 53.8; band unchanged. | CONTEXT | job description P5/M3/P3/M6; standard rule 4; P5 rationale |
+| WS-1 | Helper scripts were created and run in a session scratchpad outside the workspace, despite the boundary being stated twice. No artifact effect found; process integrity breached. | WORKSPACE (contributing: INSTRUCTIONS) | trajectory §2; transcript calls 3–4; scripts read-only inspected |
+| CODE-1 | `src/report.py` `_gaps()` hard-codes `**Mandatory (⚠ MANDATORY GAP):**`, so Run 1's report shows the warning above `_None._`. The existing test `test_no_mandatory_gap_banner_when_none` asserted the absence of `"⚠ MANDATORY GAP:"`, which never matches `"(⚠ MANDATORY GAP):"`, so it passed vacuously. | Framework defect (not a lever) | `runs/run1/report.md` §4; `src/report.py:114`; `tests/test_report.py:49-50` |
+
+**Considered and not raised:**
+- P6 grade B for a degree: the standard's table is applied as written. Left
+  for the manager.
+- Conservative M2, M6 and P4 calls: judgment variance.
+- The standard §7 score section versus the prompt: resolved correctly by the
+  agent.
+
+**Correct behaviours confirmed:**
+- did not use `irrelevant_reference.md`;
+- did not use `manifest.json` as evidence;
+- no fabricated metrics;
+- the in-progress certification was not treated as held;
+- skills-list keywords were not credited;
+- uncertainty was preserved (10 per-requirement notes, 8 top-level);
+- 22 citations passed strict validation;
+- the JSON is valid;
+- all 12 numbered requirements are covered;
+- the trajectory is accurate against the transcript.
+
+**Not changed in Milestone 4 (by instruction):** the evaluation standard, the
+job description, the CV, the prompts, scoring, and Run 1's outputs. The CTX and
+INS interventions are planned only.
+
+### Milestone 4 — CODE-1 fix (applied after the findings above were recorded)
+
+**Change:** in `src/report.py` `_gaps()`, the mandatory sub-heading is
+`**Mandatory (⚠ MANDATORY GAP):**` only when `result.mandatory_gaps` is
+non-empty. Otherwise it is `**Mandatory:**`. Scoring, validation, the header
+banner and row markers are unchanged.
+
+**Regression tests (`tests/test_report.py`):**
+- `TestNoMandatoryGap`: with no mandatory gap, the text "MANDATORY GAP" does
+  not appear anywhere in the report, including when a preferred gap exists. It
+  also checks for a plain `**Mandatory:**` followed by `_None._`, and checks the
+  standard fixture.
+- `TestMandatoryGapMarking` (one gap): the banner, the row marker and the
+  labelled section list M2; only the M2 row is marked.
+- `TestMultipleMandatoryGaps`: the banner lists `M2, M4`; both rows are marked;
+  the section label appears once and lists both.
+- Shared helpers: `_render_with_unsupported()` and `_gaps_section()`.
+
+**Proof that the tests detect the defect:** `test_report.py` was run against the
+HEAD (pre-fix) `src/report.py` in a scratch copy of the repository. The three
+`TestNoMandatoryGap` tests fail (`FAILED (failures=3)`, 20 tests). The one-gap
+and multiple-gap tests pass on both versions, as expected.
+
+**Test history (Milestone 4):** the first run after the edit gave
+`Ran 126 tests … FAILED (errors=1)`. This was a `NameError`: `NONE_LINE` was not
+imported into `test_report.py`. A test defect, fixed by adding the import.
+
+**Validation:**
+- `.venv/bin/python -m unittest discover -s tests` → `Ran 126 tests` … `OK`
+  (was 118; +8 report tests).
+- Run 1 re-rendered without modifying its assessment:
+
+  ```
+  .venv/bin/python scripts/run_evaluation.py --job context/job_description.md --cv context/candidate_cv.md --assessment runs/run1/assessment.json --standard context/evaluation_standard.md --output runs/run1/report_postfix.md
+  ```
+
+  - exit 0; stdout `Wrote runs/run1/report_postfix.md (total 52.1, Weak fit)`;
+  - **52.1, Weak fit**, unchanged;
+  - `diff` against the pre-fix `report.md` shows exactly one line changed
+    (line 53: `**Mandatory (⚠ MANDATORY GAP):**` → `**Mandatory:**`);
+  - "MANDATORY GAP" occurs 0 times in the post-fix report.
+
+| File | SHA-256 |
+|------|---------|
+| `runs/run1/report.md` (pre-fix, kept as CODE-1 evidence) | `1564720149fb558094d746a1ec705bf355fe69f0c050b39aabff5e1aff822a55` |
+| `runs/run1/report_postfix.md` (post-fix) | `ac8f08874bdef70df03459437c0bd9f8114bfa56692cc0e69263fdc1e72f59d2` |
+
+The post-fix report was written to a new file so that the uncommitted pre-fix
+render is not overwritten.
+
+**Run 1 outputs re-verified unchanged after the fix:** `assessment.json`
+`e4430998…a73c` and `trajectory.md` `244bd307…5a92`.
+
+**Not committed.**
+
+**Provenance note (appended):** the manager's commit `2e255ef` ("Milestone 3B:
+preserve Run 1 assessment and trajectory", 10:05) committed
+`runs/run1/assessment.json`, `trajectory.md` and the pre-fix `report.md`. The
+committed blobs have the frozen hashes (`e4430998…`, `244bd307…`,
+`15647201…`). The CODE-1 entry above calls the pre-fix render "uncommitted";
+that was true when it was produced, and it is now preserved in git at
+`2e255ef`. Who made the initial 09:47 working-tree copies is still not
+recorded.
+
+### Milestone 4 — finalisation
+
+**Date:** 2026-10-27
+
+**Provenance gap (manager-directed wording):** Repository copies of
+`assessment.json` and `trajectory.md` were discovered already present during
+preservation verification. They were byte-identical to the isolated originals,
+but the actor or process that initially copied them at approximately 09:47
+could not be established.
+
+**Preserved Run 1 provenance (`runs/run1/provenance/`):**
+
+| File | SHA-256 | Notes |
+|------|---------|-------|
+| `build.py` | `2d8c5531b1b11b96a2b477e4bfb5e450db0df57966f458cc16c86fde1ad568b5` | Byte-for-byte copy (`cp -p`, `cmp` OK) from the Run 1 session scratchpad. Matches the heredoc in transcript event 3. |
+| `check.py` | `8b30a35c43814f66f36bb0e17ee31d1d49181b84e2029b70150f2552c94ed5cd` | Same; transcript event 4. |
+| `activity_log.md` | `6fc9047f7197603cc0b13667f43890610ba58fcaf1b21f6075e144b2b8a4c1af` | Observable events only (see below). |
+| `hashes.sha256` | `7730bc785227af7bc1fe1c804c4dc3983b006abaedb78d80135fbf5c603b81ef` | Lists the three files above; `sha256sum -c` OK. |
+
+- **What `activity_log.md` contains:** the kickoff message; all six tool calls
+  (name, command or path, description, success) with UTC timestamps; the two
+  workspace directory listings; the files opened; and the files created.
+- **Deliberately excluded:** thinking blocks, assistant prose, system prompts,
+  tool definitions, API, cost and harness metadata, and echoed file contents.
+- **Source transcript:** not copied. Its SHA-256 is
+  `c839f58b5d825e15b71a8c450a44663840d9e8c8fe84e61f7b0859442b691095`,
+  unchanged since the review.
+- **Correction made before the hashes were finalised:** a draft sentence said
+  the scripts contained no comments. `check.py` has two short code comments, so
+  the sentence was corrected before hashing.
+
+**Manager decisions for Run 2:** recorded in `reviews/diagnosis.md` ("Manager
+decisions for Run 2"), covering CTX-1 (calendar duration of qualifying
+professional experience), CTX-2 (parenthetical-list rules), INS-1 (all
+explicit obligations considered; additional requirement or explained
+exclusion) and WS-1 (approved `scratch/` only). **Planned, not implemented.**
+The standard, the prompt and the job description are unchanged.
+
+**Final validation:**
+- `.venv/bin/python -m unittest discover -s tests` → `Ran 126 tests` … `OK`.
+- Run 1 revalidation → exit 0, **52.1, Weak fit**. The output is
+  byte-identical to `runs/run1/report_postfix.md`, and "MANDATORY GAP" occurs
+  0 times.
+- Run 1 immutability: `assessment.json` `e4430998…a73c` and `trajectory.md`
+  `244bd307…5a92` are unchanged in both the repository and the isolated
+  workspace. The committed `runs/run1/*` files are unchanged against HEAD.
+
+**Commit:** "Milestone 4: review and diagnose Run 1". Run 2 has not been
+started, and no Run 2 workspace exists.

@@ -111,7 +111,8 @@ def _score(result: AssessmentResult) -> str:
 
 
 def _gaps(result: AssessmentResult) -> str:
-    lines = [f"## {SECTION_TITLES[3]}", "", "**Mandatory (⚠ MANDATORY GAP):**", ""]
+    mandatory_label = "**Mandatory (⚠ MANDATORY GAP):**" if result.mandatory_gaps else "**Mandatory:**"
+    lines = [f"## {SECTION_TITLES[3]}", "", mandatory_label, ""]
     lines += _requirement_lines(result, result.mandatory_gaps) or [NONE_LINE]
     lines += ["", "**Preferred:**", ""]
     lines += _requirement_lines(result, result.preferred_gaps) or [NONE_LINE]

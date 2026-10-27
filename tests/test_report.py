@@ -8,7 +8,7 @@ import unittest
 from src.evaluator import evaluate
 from src.models import Evidence, EvidenceGrade, Status
 from src.parser import load_assessment, parse_cv, parse_job_description
-from src.report import NO_EVIDENCE, SECTION_TITLES, render_report
+from src.report import NO_EVIDENCE, NONE_LINE, SECTION_TITLES, render_report
 from support import FIXTURE_ASSESSMENT, FIXTURE_CV, FIXTURE_JD, assessment, submission
 
 
@@ -54,14 +54,50 @@ class TestReport(unittest.TestCase):
         self.assertEqual(self.report, again)
 
 
-class TestMandatoryGapMarking(unittest.TestCase):
+def _gaps_section(report: str) -> str:
+    return report.split("## 4. Genuine gaps", 1)[1].split("## 5.", 1)[0]
+
+
+def _render_with_unsupported(*unsupported: str) -> str:
+    job = parse_job_description(FIXTURE_JD)
+    cv = parse_cv(FIXTURE_CV)
+    alpha = Evidence("Experience", "Used Tool Alpha daily in production.")
+    ids = ("M1", "M2", "M3", "M4", "P1", "P2")
+    items = [
+        assessment(i, Status.UNSUPPORTED, EvidenceGrade.C) if i in unsupported
+        else assessment(i, Status.SUPPORTED, EvidenceGrade.A, (alpha,))
+        for i in ids
+    ]
+    return render_report(evaluate(job, cv, submission(*items)))
+
+
+class TestNoMandatoryGap(unittest.TestCase):
+    """Regression for CODE-1: no gap warning anywhere when no mandatory requirement is UNSUPPORTED."""
+
     def setUp(self) -> None:
+        # A preferred gap must not trigger the mandatory warning either.
+        self.report = _render_with_unsupported("P2")
+
+    def test_no_warning_text_anywhere(self) -> None:
+        self.assertNotIn("MANDATORY GAP", self.report)
+
+    def test_mandatory_gaps_label_is_plain(self) -> None:
+        gaps = _gaps_section(self.report)
+        self.assertIn("**Mandatory:**\n\n_None._", gaps)
+
+    def test_preferred_gap_still_listed(self) -> None:
+        self.assertIn("- **P2** — Experience with Tool Zeta.", _gaps_section(self.report))
+
+    def test_fixture_report_has_no_warning_text(self) -> None:
         job = parse_job_description(FIXTURE_JD)
         cv = parse_cv(FIXTURE_CV)
-        alpha = Evidence("Experience", "Used Tool Alpha daily in production.")
-        items = [assessment(i, Status.SUPPORTED, EvidenceGrade.A, (alpha,)) for i in ("M1", "M3", "M4", "P1", "P2")]
-        items.append(assessment("M2", Status.UNSUPPORTED, EvidenceGrade.C))
-        self.report = render_report(evaluate(job, cv, submission(*items)))
+        report = render_report(evaluate(job, cv, load_assessment(FIXTURE_ASSESSMENT)))
+        self.assertNotIn("MANDATORY GAP", report)
+
+
+class TestMandatoryGapMarking(unittest.TestCase):
+    def setUp(self) -> None:
+        self.report = _render_with_unsupported("M2")
 
     def test_banner_names_the_gap(self) -> None:
         self.assertIn("> **⚠ MANDATORY GAP:** unsupported mandatory requirement(s): M2.", self.report)
@@ -71,8 +107,34 @@ class TestMandatoryGapMarking(unittest.TestCase):
         self.assertIn("**UNSUPPORTED** ⚠ MANDATORY GAP", row)
 
     def test_gap_listed_in_genuine_gaps(self) -> None:
-        gaps = self.report.split("## 4. Genuine gaps", 1)[1].split("## 5.", 1)[0]
+        gaps = _gaps_section(self.report)
+        self.assertIn("**Mandatory (⚠ MANDATORY GAP):**", gaps)
         self.assertIn("- **M2** — Experience with Tool Beta.", gaps)
+
+    def test_only_the_gap_row_is_marked(self) -> None:
+        marked = [line for line in self.report.splitlines() if line.startswith("| ") and "MANDATORY GAP" in line]
+        self.assertEqual([line.split(" | ", 1)[0] for line in marked], ["| M2"])
+
+
+class TestMultipleMandatoryGaps(unittest.TestCase):
+    def setUp(self) -> None:
+        self.report = _render_with_unsupported("M2", "M4")
+
+    def test_banner_names_every_gap(self) -> None:
+        self.assertIn("> **⚠ MANDATORY GAP:** unsupported mandatory requirement(s): M2, M4.", self.report)
+
+    def test_every_gap_row_is_marked(self) -> None:
+        for req_id in ("M2", "M4"):
+            with self.subTest(req=req_id):
+                row = next(line for line in self.report.splitlines() if line.startswith(f"| {req_id} |"))
+                self.assertIn("**UNSUPPORTED** ⚠ MANDATORY GAP", row)
+
+    def test_gaps_section_labelled_once_and_lists_all(self) -> None:
+        gaps = _gaps_section(self.report)
+        self.assertEqual(gaps.count("**Mandatory (⚠ MANDATORY GAP):**"), 1)
+        self.assertIn("- **M2** — Experience with Tool Beta.", gaps)
+        self.assertIn("- **M4** — Experience with Tool Delta.", gaps)
+        self.assertNotIn(NONE_LINE, gaps.split("**Preferred:**", 1)[0])
 
     def test_pipe_in_text_is_escaped(self) -> None:
         job = parse_job_description(FIXTURE_JD)
